@@ -4,3 +4,14 @@ python -m venv .venv
 
 pip install django
 
+-------
+
+django-admin startproject CVAnalyserProject
+
+cd CVAnalyserProject
+
+python manage.py startapp CVAnalyser
+
+python manage.py createsuperuser
+
+python manage.py runserver

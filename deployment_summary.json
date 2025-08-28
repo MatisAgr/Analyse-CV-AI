@@ -1,0 +1,30 @@
+{
+  "project_name": "Analyse CV IA",
+  "description": "Système d'analyse intelligente de CV avec BERT et Transformers",
+  "technologies": [
+    "Django 5.2.5",
+    "BERT (bert-large-cased-finetuned-conll03-english)",
+    "Sentence Transformers (all-MiniLM-L6-v2)",
+    "PyTorch",
+    "NLTK",
+    "scikit-learn"
+  ],
+  "features": [
+    "Extraction automatique compétences/expérience",
+    "Score de correspondance CV/poste",
+    "API REST complète",
+    "Interface web intuitive",
+    "Support PDF/DOCX/TXT"
+  ],
+  "installation": {
+    "command": "python install_project.py",
+    "test": "python test_installation_equipe.py",
+    "start": "start_server.bat (Windows) ou ./start_server.sh (Linux/Mac)"
+  },
+  "team_ready": true,
+  "documentation": [
+    "README.md - Documentation complète",
+    "INSTALLATION_EQUIPE.md - Guide équipe",
+    "WORKFLOW_GITHUB.md - Collaboration GitHub"
+  ]
+}

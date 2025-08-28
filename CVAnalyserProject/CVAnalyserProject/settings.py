@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'CVAnalyser',
 ]
 
 MIDDLEWARE = [
@@ -116,7 +117,23 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+# Media files
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# IA Configuration
+AI_MODELS_DIR = BASE_DIR / 'ai_models'
+DATASETS_DIR = BASE_DIR / 'datasets'
+
+# NLP Model Configuration
+NLP_MODEL_NAME = 'sentence-transformers/all-MiniLM-L6-v2'  # Modèle léger pour commencer
+BERT_MODEL_NAME = 'bert-base-uncased'
+
+# CV Analysis Configuration
+CV_UPLOAD_MAX_SIZE = 5 * 1024 * 1024  # 5MB
+ALLOWED_CV_EXTENSIONS = ['.pdf', '.doc', '.docx', '.txt']

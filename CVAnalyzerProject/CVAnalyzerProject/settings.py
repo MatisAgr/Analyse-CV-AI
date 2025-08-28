@@ -128,7 +128,7 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Custom User Model
-AUTH_USER_MODEL = 'CVAnalyser.User'
+AUTH_USER_MODEL = 'CVAnalyzer.User'
 
 # Django REST Framework Configuration
 REST_FRAMEWORK = {

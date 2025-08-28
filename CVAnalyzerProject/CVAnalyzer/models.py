@@ -12,6 +12,9 @@ class User(AbstractUser):
         ('candidat', 'Candidat'),
     ]
     
+    # Email comme identifiant unique
+    email = models.EmailField(unique=True, help_text="Adresse email (identifiant de connexion)")
+    
     role = models.CharField(
         max_length=20, 
         choices=ROLE_CHOICES, 
@@ -26,11 +29,19 @@ class User(AbstractUser):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
+    # Utiliser email comme identifiant de connexion
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username']  # username sera généré automatiquement
+    
     def save(self, *args, **kwargs):
         """
-        Override de save pour assigner automatiquement 
+        Override de save pour générer username et assigner automatiquement 
         les groupes selon le rôle
         """
+        # Générer username à partir de l'email si pas défini
+        if not self.username:
+            self.username = self.email.split('@')[0]
+            
         is_new = self.pk is None
         super().save(*args, **kwargs)
         
@@ -55,7 +66,7 @@ class User(AbstractUser):
             self.groups.add(group)
     
     def __str__(self):
-        return f"{self.username} ({self.get_role_display()})"
+        return f"{self.email} ({self.get_role_display()})"
     
     class Meta:
         verbose_name = "Utilisateur"

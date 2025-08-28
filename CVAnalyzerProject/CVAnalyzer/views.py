@@ -105,7 +105,7 @@ def list_users(request):
 def check_user_info(request):
     """Voir les infos de l'utilisateur connecté (pour tests)"""
     return Response({
-        'username': request.user.username,
+        'email': request.user.email,
         'role': request.user.role,
         'is_superuser': request.user.is_superuser,
         'is_staff': request.user.is_staff,

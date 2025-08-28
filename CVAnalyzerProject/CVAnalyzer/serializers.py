@@ -10,7 +10,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('username', 'email', 'password', 'password_confirm', 'role', 'first_name', 'last_name', 'phone')
+        fields = ('email', 'password', 'password_confirm', 'role', 'first_name', 'last_name', 'phone')
         extra_kwargs = {
             'role': {'default': 'candidat'},
         }
@@ -28,22 +28,22 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
 class UserLoginSerializer(serializers.Serializer):
     """Serializer pour la connexion"""
-    username = serializers.CharField()
+    email = serializers.EmailField()
     password = serializers.CharField()
 
     def validate(self, data):
-        username = data.get('username')
+        email = data.get('email')
         password = data.get('password')
 
-        if username and password:
-            user = authenticate(username=username, password=password)
+        if email and password:
+            user = authenticate(username=email, password=password)  # Django utilise username pour authenticate
             if not user:
                 raise serializers.ValidationError("Identifiants invalides")
             if not user.is_active:
                 raise serializers.ValidationError("Compte désactivé")
             data['user'] = user
         else:
-            raise serializers.ValidationError("Username et password requis")
+            raise serializers.ValidationError("Email et password requis")
         
         return data
 
@@ -54,8 +54,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'phone', 'role', 'groups', 'created_at')
-        read_only_fields = ('id', 'username', 'created_at', 'groups')
+        fields = ('id', 'email', 'first_name', 'last_name', 'phone', 'role', 'groups', 'created_at')
+        read_only_fields = ('id', 'email', 'created_at', 'groups')
 
 
 class UserListSerializer(serializers.ModelSerializer):
@@ -64,5 +64,5 @@ class UserListSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'role', 'is_active', 'groups', 'created_at')
-        read_only_fields = ('id', 'username', 'created_at', 'groups')
+        fields = ('id', 'email', 'first_name', 'last_name', 'role', 'is_active', 'groups', 'created_at')
+        read_only_fields = ('id', 'created_at', 'groups')

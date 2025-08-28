@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class CvanalyserConfig(AppConfig):
+class CvanalyzerConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'CVAnalyser'
+    name = 'CVAnalyzer'

@@ -22,6 +22,21 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data.pop('password_confirm')
+        
+        # Générer un username à partir de l'email
+        email = validated_data['email']
+        username = email.split('@')[0]
+        
+        # Vérifier l'unicité du username et ajouter un numéro si nécessaire
+        original_username = username
+        counter = 1
+        while User.objects.filter(username=username).exists():
+            username = f"{original_username}{counter}"
+            counter += 1
+        
+        # Ajouter le username aux données validées
+        validated_data['username'] = username
+        
         user = User.objects.create_user(**validated_data)
         return user
 
@@ -36,7 +51,24 @@ class UserLoginSerializer(serializers.Serializer):
         password = data.get('password')
 
         if email and password:
-            user = authenticate(username=email, password=password)  # Django utilise username pour authenticate
+            # Chercher l'utilisateur par email d'abord
+            try:
+                user_obj = User.objects.get(email=email)
+                print(f"DEBUG: User trouvé: {user_obj.username}, {user_obj.email}")
+                
+                # Puis authentifier avec le username trouvé
+                user = authenticate(username=user_obj.username, password=password)
+                print(f"DEBUG: Authentification résultat: {user}")
+                
+                if not user:
+                    # Essayer aussi avec l'email directement
+                    user = authenticate(username=email, password=password)
+                    print(f"DEBUG: Authentification avec email: {user}")
+                    
+            except User.DoesNotExist:
+                print(f"DEBUG: Aucun utilisateur trouvé avec email: {email}")
+                user = None
+                
             if not user:
                 raise serializers.ValidationError("Identifiants invalides")
             if not user.is_active:

@@ -1,0 +1,43 @@
+<nav class="bg-white shadow-lg sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-8">
+        <div class="flex justify-between h-16">
+
+            <!-- logo -->
+            <div class="flex items-center">
+                <a href="{% url 'home' %}" class="flex-shrink-0 flex items-center hover:opacity-80 transition-opacity">
+                    <i class="fas fa-brain text-3xl text-indigo-600 mr-3"></i>
+                    <span class="text-xl font-bold text-gray-900">CVIA</span>
+                </a>
+            </div>
+            
+            <!-- liens -->
+            <div class="flex items-center space-x-8">
+                
+                {% if user.is_authenticated %}
+                    <!-- user connecté -->
+                    <div class="flex items-center space-x-4">
+                        <span class="text-gray-600 text-sm">
+                            Bonjour, <span class="font-medium text-gray-900">{{ user.first_name|default:user.username }}</span>
+                        </span>
+                        <a href="{% url 'logout' %}" class="text-red-600 hover:text-red-500 font-medium text-sm flex items-center">
+                            <i class="fas fa-sign-out-alt mr-1"></i>
+                            Déconnexion
+                        </a>
+                    </div>
+                {% else %}
+                    <!-- user non connecté -->
+                    <div class="flex items-center space-x-4">
+                        <a href="{% url 'login' %}" class="text-indigo-600 hover:text-indigo-500 font-medium">
+                            <i class="fas fa-sign-in-alt mr-1"></i>
+                            Connexion
+                        </a>
+                        <a href="{% url 'register' %}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                            <i class="fas fa-user-plus mr-1"></i>
+                            Inscription
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</nav>

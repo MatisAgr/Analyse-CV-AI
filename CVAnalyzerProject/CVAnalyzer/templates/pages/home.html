@@ -1,0 +1,340 @@
+{% extends 'core/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+
+
+
+<!-- deposer les docs -->
+<section class="min-h-screen bg-gradient-to-br from-green-600 via-blue-600 to-purple-800 flex items-center justify-center py-12">
+    <div class="max-w-4xl mx-auto px-8 py-20">
+        <div class="text-center text-white">
+            <div class="mb-8">
+                <i class="fas fa-briefcase text-6xl mb-4 text-yellow-300"></i>
+                <h1 class="text-5xl font-bold mb-4">
+                    Rejoignez notre entreprise de fou
+                </h1>
+                <p class="text-xl text-blue-100 max-w-2xl mx-auto">
+                    Déposez votre CV et lettre de motivation. Notre IA de zinzin analysera votre cv pour savoir si on veut de vous
+                </p>
+            </div>
+
+            <!-- depot de docs -->
+            <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-2xl p-8 mb-8 border border-white border-opacity-20">
+                <h2 class="text-2xl font-semibold mb-6 text-white">
+                    <i class="fas fa-cloud-upload-alt mr-2"></i>
+                    Déposez vos documents
+                </h2>
+                
+                <!-- dropzone -->
+                <div id="dropzone" class="border-2 border-dashed border-white border-opacity-40 rounded-xl p-12 text-center hover:border-yellow-300 hover:bg-white hover:bg-opacity-5 transition-all duration-300 cursor-pointer">
+                    <i class="fas fa-file-upload text-4xl mb-4 text-blue-200"></i>
+                    <p class="text-lg mb-2">Glissez-déposez vos fichiers ici</p>
+                    <p class="text-sm text-blue-200 mb-4">ou cliquez pour sélectionner</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-md mx-auto">
+                        <button id="upload-cv" class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center">
+                            <i class="fas fa-file-alt mr-2"></i>
+                            CV (PDF/Word)
+                        </button>
+                        <button id="upload-motivation" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center">
+                            <i class="fas fa-heart mr-2"></i>
+                            Lettre de démotivation
+                        </button>
+                    </div>
+                    
+                    <!-- inputs cachés -->
+                    <input type="file" id="cv-input" accept=".pdf,.doc,.docx" class="hidden" />
+                    <input type="file" id="motivation-input" accept=".pdf,.doc,.docx" class="hidden" />
+                </div>
+
+                <!-- list fichiers -->
+                <div id="files-list" class="mt-6 space-y-2 hidden">
+                    <h3 class="text-lg font-medium text-white mb-3">Fichiers sélectionnés :</h3>
+                </div>
+
+                <!-- bouton d'envoi -->
+                <button id="submit-btn" class="hidden bg-yellow-500 hover:bg-yellow-600 text-gray-900 px-8 py-3 rounded-lg font-bold text-lg mt-6 transition-colors">
+                    <i class="fas fa-paper-plane mr-2"></i>
+                    Envoyer ma candidature
+                </button>
+            </div>
+
+            <!-- informations importantes -->
+            <div class="bg-yellow-100 bg-opacity-20 rounded-xl p-6 text-left max-w-2xl mx-auto">
+                <h3 class="text-lg font-semibold text-yellow-300 mb-3 flex items-center">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    Infos pas super importantes en vrai
+                </h3>
+                <ul class="text-sm text-blue-100 space-y-2">
+                    <li class="flex items-start">
+                        <i class="fas fa-check-circle text-green-400 mr-2 mt-0.5"></i>
+                        Vos documents seront analysés automatiquement par notre IA de fou
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-shield-alt text-blue-200 mr-2 mt-0.5"></i>
+                        Toutes vos données sont sécurisées et confidentielles (ou pas)
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-clock text-purple-200 mr-2 mt-0.5"></i>
+                        Vous recevrez une réponse sous 48h maximum (tu peux rêver)
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-user-check text-yellow-400 mr-2 mt-0.5"></i>
+                        Création d'un compte requise pour suivre votre candidature
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- modal pour utilisateurs non co -->
+<div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+    <div class="bg-white rounded-2xl p-8 max-w-md mx-4 relative">
+        <button id="close-modal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+            <i class="fas fa-times text-xl"></i>
+        </button>
+        
+        <div class="text-center">
+            <i class="fas fa-user-lock text-4xl text-indigo-600 mb-4"></i>
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">Connexion requise</h2>
+            <p class="text-gray-600 mb-6">
+                Pour déposer votre candidature, vous devez créer un compte ou vous connecter. 
+                Cela nous permet de suivre votre dossier et de vous tenir informé.
+            </p>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <a href="{% url 'login' %}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                    <i class="fas fa-sign-in-alt mr-2"></i>
+                    Se connecter
+                </a>
+                <a href="{% url 'register' %}" class="border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-600 hover:text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                    <i class="fas fa-user-plus mr-2"></i>
+                    S'inscrire
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- message de OK -->
+<div id="success-message" class="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg hidden z-50">
+    <i class="fas fa-check-circle mr-2"></i>
+    <span>Candidature envoyée avec succès !</span>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+
+
+<!-- TODO: on verra plus tard la logique avec le backend -->
+<script>
+
+    // Obtenir le token CSRF
+    function getCSRFToken() {
+        return document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+            document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const dropzone = document.getElementById('dropzone');
+        const cvInput = document.getElementById('cv-input');
+        const motivationInput = document.getElementById('motivation-input');
+        const uploadCvBtn = document.getElementById('upload-cv');
+        const uploadMotivationBtn = document.getElementById('upload-motivation');
+        const filesList = document.getElementById('files-list');
+        const submitBtn = document.getElementById('submit-btn');
+        const authModal = document.getElementById('auth-modal');
+        const closeModal = document.getElementById('close-modal');
+        const successMessage = document.getElementById('success-message');
+        
+        let selectedFiles = {
+            cv: null,
+            motivation: null
+        };
+
+        // Vérifier l'authentification
+        async function checkAuthentication() {
+            try {
+                const response = await fetch('/api/auth-status/');
+                const data = await response.json();
+                return data.authenticated;
+            } catch (error) {
+                console.error('Erreur lors de la vérification d\'authentification:', error);
+                return false;
+            }
+        }
+
+        // Gestionnaire pour les boutons d'upload
+        uploadCvBtn.addEventListener('click', () => {
+            cvInput.click();
+        });
+
+        uploadMotivationBtn.addEventListener('click', () => {
+            motivationInput.click();
+        });
+
+        // Gestionnaire pour les inputs de fichiers
+        cvInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                selectedFiles.cv = e.target.files[0];
+                updateFilesList();
+            }
+        });
+
+        motivationInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                selectedFiles.motivation = e.target.files[0];
+                updateFilesList();
+            }
+        });
+
+        // Drag & Drop
+        dropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzone.classList.add('border-yellow-300', 'bg-white', 'bg-opacity-5');
+        });
+
+        dropzone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('border-yellow-300', 'bg-white', 'bg-opacity-5');
+        });
+
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('border-yellow-300', 'bg-white', 'bg-opacity-5');
+            
+            const files = Array.from(e.dataTransfer.files);
+            files.forEach((file, index) => {
+                if (file.type.includes('pdf') || file.type.includes('document') || file.type.includes('word')) {
+                    if (index === 0 && !selectedFiles.cv) {
+                        selectedFiles.cv = file;
+                    } else if (!selectedFiles.motivation) {
+                        selectedFiles.motivation = file;
+                    }
+                }
+            });
+            updateFilesList();
+        });
+
+        // Mettre à jour la liste des fichiers
+        function updateFilesList() {
+            const hasFiles = selectedFiles.cv || selectedFiles.motivation;
+            
+            if (hasFiles) {
+                filesList.classList.remove('hidden');
+                filesList.innerHTML = '<h3 class="text-lg font-medium text-white mb-3">Fichiers sélectionnés :</h3>';
+                
+                if (selectedFiles.cv) {
+                    const cvDiv = document.createElement('div');
+                    cvDiv.className = 'flex items-center justify-between bg-green-500 bg-opacity-20 rounded-lg p-3';
+                    cvDiv.innerHTML = `
+                        <div class="flex items-center">
+                            <i class="fas fa-file-alt text-green-400 mr-2"></i>
+                            <span class="text-white">CV: ${selectedFiles.cv.name}</span>
+                        </div>
+                        <button onclick="removeFile('cv')" class="text-red-400 hover:text-red-300">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    `;
+                    filesList.appendChild(cvDiv);
+                }
+                
+                if (selectedFiles.motivation) {
+                    const motivationDiv = document.createElement('div');
+                    motivationDiv.className = 'flex items-center justify-between bg-blue-500 bg-opacity-20 rounded-lg p-3';
+                    motivationDiv.innerHTML = `
+                        <div class="flex items-center">
+                            <i class="fas fa-heart text-blue-400 mr-2"></i>
+                            <span class="text-white">Lettre: ${selectedFiles.motivation.name}</span>
+                        </div>
+                        <button onclick="removeFile('motivation')" class="text-red-400 hover:text-red-300">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    `;
+                    filesList.appendChild(motivationDiv);
+                }
+                
+                submitBtn.classList.remove('hidden');
+            } else {
+                filesList.classList.add('hidden');
+                submitBtn.classList.add('hidden');
+            }
+        }
+
+        // Supprimer un fichier
+        window.removeFile = function(type) {
+            selectedFiles[type] = null;
+            if (type === 'cv') {
+                cvInput.value = '';
+            } else {
+                motivationInput.value = '';
+            }
+            updateFilesList();
+        };
+
+        // Gestionnaire pour le bouton d'envoi
+        submitBtn.addEventListener('click', async () => {
+            const isAuthenticated = await checkAuthentication();
+            
+            if (!isAuthenticated) {
+                authModal.classList.remove('hidden');
+                return;
+            }
+
+            // Envoyer les fichiers
+            const formData = new FormData();
+            if (selectedFiles.cv) {
+                formData.append('cv', selectedFiles.cv);
+            }
+            if (selectedFiles.motivation) {
+                formData.append('motivation', selectedFiles.motivation);
+            }
+
+            try {
+                const response = await fetch('/api/upload/', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': getCSRFToken()
+                    }
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    // Afficher le message de succès
+                    successMessage.classList.remove('hidden');
+                    setTimeout(() => {
+                        successMessage.classList.add('hidden');
+                    }, 5000);
+
+                    // Réinitialiser le formulaire
+                    selectedFiles = { cv: null, motivation: null };
+                    cvInput.value = '';
+                    motivationInput.value = '';
+                    updateFilesList();
+                }
+            } catch (error) {
+                console.error('Erreur lors de l\'envoi:', error);
+                alert('Erreur lors de l\'envoi. Veuillez réessayer.');
+            }
+        });
+
+        // Fermer le modal
+        closeModal.addEventListener('click', () => {
+            authModal.classList.add('hidden');
+        });
+
+        // Fermer le modal en cliquant à l'extérieur
+        authModal.addEventListener('click', (e) => {
+            if (e.target === authModal) {
+                authModal.classList.add('hidden');
+            }
+        });
+    });
+</script>
+
+{% endblock %}

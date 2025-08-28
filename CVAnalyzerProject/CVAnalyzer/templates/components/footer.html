@@ -1,0 +1,101 @@
+<footer class="bg-gray-900 text-white">
+    <div class="max-w-7xl mx-auto px-8 py-12">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+            <!-- logo et mini desc -->
+            <div class="col-span-1 md:col-span-1">
+                <div class="flex items-center mb-4">
+                    <i class="fas fa-brain text-3xl text-blue-600 mr-3"></i>
+                    <span class="text-xl font-bold">CVIA</span>
+                </div>
+                <p class="text-gray-400 mb-4 max-w-md">
+                    Plateforme intelligente pour détruire vos espoirs sur votre candidature. 
+                    Notre IA analyse dénigre vos documents pour jamais vous faire embaucher.
+                    <br /><br />
+                    Regardez notre vidéo de fou en dessous
+                </p>
+                
+                <div class="flex space-x-4">
+                    <!-- cette video est vrmt banger -->
+                    <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" class="text-gray-400 hover:text-indigo-400 transition-colors" title="YouTube">
+                        <i class="fa-brands fa-youtube text-4xl"></i>
+                    </a>
+
+                    <a href="mailto:ceciestunfauxmail@entreprisedefou.com" class="text-gray-400 hover:text-indigo-400 transition-colors" title="Email">
+                        <i class="fas fa-envelope text-4xl"></i>
+                    </a>
+                    <a href="tel:+33123456789" class="text-gray-400 hover:text-indigo-400 transition-colors" title="Téléphone">
+                        <i class="fas fa-phone text-4xl"></i>
+                    </a>
+                </div>
+
+
+            </div>
+            
+            <!-- liens pour remplir le footer -->
+            <div>
+                <h3 class="text-lg font-semibold mb-4">
+                    <i class="fas fa-user-tie mr-2 text-indigo-400"></i>
+                    Candidats
+                </h3>
+                <ul class="space-y-2">
+                    <li><a href="{% url 'home' %}" class="text-gray-400 hover:text-white transition-colors">Déposer une candidature</a></li>
+                    {% if user.is_authenticated %}
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Mon compte</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Mes candidatures</a></li>
+                        <li><a href="{% url 'logout' %}" class="text-gray-400 hover:text-white transition-colors">Déconnexion</a></li>
+                    {% else %}
+                        <li><a href="{% url 'login' %}" class="text-gray-400 hover:text-white transition-colors">Se connecter</a></li>
+                        <li><a href="{% url 'register' %}" class="text-gray-400 hover:text-white transition-colors">Créer un compte</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+            
+            <!-- fake info tqt c'est pour le style -->
+            <div>
+                <h3 class="text-lg font-semibold mb-4">
+                    <i class="fas fa-info-circle mr-2 text-indigo-400"></i>
+                    Informations
+                </h3>
+                <ul class="space-y-2">
+                    <li><a onclick="showAlert()" class="text-gray-400 hover:text-white transition-colors">À propos</a></li>
+                    <li><a onclick="showAlert()" class="text-gray-400 hover:text-white transition-colors">Contact</a></li>
+                    <li><a onclick="showAlert()" class="text-gray-400 hover:text-white transition-colors">FAQ Candidats</a></li>
+                    <li><a onclick="showAlert()" class="text-gray-400 hover:text-white transition-colors">Processus de recrutement</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- ça aussi c'est pour le style -->
+        <div class="border-t border-gray-800 mt-8 pt-8">
+            <div class="flex flex-col lg:flex-row justify-between items-center">
+                <p class="text-gray-400 text-sm">
+                    © 2025 Entreprise de fou. Aucun droit reservé même pas nous.
+                </p>
+                <div class="flex space-x-6 mt-4 lg:mt-0">
+                    <a onclick="showAlert()" class="text-gray-400 hover:text-white text-sm transition-colors">
+                        <i class="fas fa-shield-alt mr-1"></i>
+                        Politique de confidentialité
+                    </a>
+                    <a onclick="showAlert()" class="text-gray-400 hover:text-white text-sm transition-colors">
+                        <i class="fas fa-file-contract mr-1"></i>
+                        Conditions d'utilisation
+                    </a>
+                    <a onclick="showAlert()" class="text-gray-400 hover:text-white text-sm transition-colors">
+                        <i class="fas fa-cookie-bite mr-1"></i>
+                        Cookies
+                    </a>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+</footer>
+
+<!-- script pour créé une alerte -->
+<script>
+    function showAlert() {
+        alert("Et non !");
+    }
+</script>

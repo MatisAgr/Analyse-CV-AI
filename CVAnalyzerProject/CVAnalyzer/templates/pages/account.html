@@ -124,42 +124,64 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ candidature.date_candidature|date:"d M Y" }}
+                                {{ candidature.created_at|date:"d M Y" }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                {% if candidature.statut_color == 'green' %}
+                                {% if candidature.status == 'acceptee' %}
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                         <i class="fas fa-check-circle mr-1"></i>
-                                        {{ candidature.statut_display }}
+                                        Acceptée
                                     </span>
-                                {% elif candidature.statut_color == 'yellow' %}
+                                {% elif candidature.status == 'en_attente' %}
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                                         <i class="fas fa-clock mr-1"></i>
-                                        {{ candidature.statut_display }}
+                                        En attente
                                     </span>
-                                {% elif candidature.statut_color == 'red' %}
+                                {% elif candidature.status == 'en_cours' %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                        <i class="fas fa-eye mr-1"></i>
+                                        En cours
+                                    </span>
+                                {% elif candidature.status == 'refusee' %}
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                                         <i class="fas fa-times-circle mr-1"></i>
-                                        {{ candidature.statut_display }}
+                                        Refusée
                                     </span>
                                 {% endif %}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center">
-                                    <div class="text-sm font-medium text-gray-900 mr-2">{{ candidature.score_ia }}%</div>
-                                    <div class="w-16 bg-gray-200 rounded-full h-2">
-                                        <div class="h-2 rounded-full {% if candidature.score_ia >= 80 %}bg-green-500{% elif candidature.score_ia >= 60 %}bg-yellow-500{% else %}bg-red-500{% endif %}" 
-                                             style="width: {{ candidature.score_ia }}%"></div>
+                                {% if candidature.score_ia %}
+                                    <div class="flex items-center">
+                                        <div class="text-sm font-medium text-gray-900 mr-2">{{ candidature.score_ia|floatformat:1 }}%</div>
+                                        <div class="w-20 bg-gray-200 rounded-full h-2.5">
+                                            <div class="h-2.5 rounded-full {% if candidature.score_ia >= 80 %}bg-green-500{% elif candidature.score_ia >= 60 %}bg-yellow-500{% else %}bg-red-500{% endif %} transition-all duration-300" 
+                                                 style="width: {{ candidature.score_ia }}%"></div>
+                                        </div>
+                                        <i class="fas fa-robot ml-2 text-blue-500" title="Analysé par IA ({{ candidature.score_ia|floatformat:1 }}/100)"></i>
                                     </div>
-                                </div>
+                                {% else %}
+                                    <span class="text-sm text-gray-400">
+                                        <i class="fas fa-hourglass-half mr-1"></i>
+                                        En cours...
+                                    </span>
+                                {% endif %}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 <div class="flex items-center space-x-2">
-                                    {% if candidature.cv_nom %}
-                                        <i class="fas fa-file-pdf text-red-500" title="CV: {{ candidature.cv_nom }}"></i>
+                                    {% if candidature.cv %}
+                                        <a href="{{ candidature.cv.url }}" target="_blank" class="text-red-500 hover:text-red-700" title="Voir le CV">
+                                            <i class="fas fa-file-pdf"></i>
+                                        </a>
                                     {% endif %}
-                                    {% if candidature.lettre_nom %}
-                                        <i class="fas fa-file-alt text-blue-500" title="Lettre: {{ candidature.lettre_nom }}"></i>
+                                    {% if candidature.lettre_motivation %}
+                                        <a href="{{ candidature.lettre_motivation.url }}" target="_blank" class="text-blue-500 hover:text-blue-700" title="Voir la lettre">
+                                            <i class="fas fa-file-alt"></i>
+                                        </a>
+                                    {% endif %}
+                                    {% if candidature.competences_extraites %}
+                                        <span class="text-green-500" title="Compétences extraites: {{ candidature.competences_extraites|length }}">
+                                            <i class="fas fa-brain"></i>
+                                        </span>
                                     {% endif %}
                                 </div>
                             </td>

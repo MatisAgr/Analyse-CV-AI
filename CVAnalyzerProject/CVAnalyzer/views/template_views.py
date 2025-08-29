@@ -7,6 +7,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
+from django.db import models
 import os
 import json
 
@@ -171,8 +172,8 @@ def upload_documents(request):
             # Création de la candidature en base de données
             candidature = Candidature.objects.create(
                 candidat=request.user,
-                poste='Candidature spontanée',  # Valeur par défaut
-                entreprise='CIVIA Corp.',
+                poste='Candidature spontanée',  # TODO: mettre des postes custom si on a le temps
+                entreprise='CIVIA Corp.', # TODO: mettre entreprise custom si on a le temps
                 cv=cv_file,
                 status='en_attente',
                 score_ia=overall_score,
@@ -236,63 +237,34 @@ def account_view(request):
 # Dashboard candidat
 @login_required
 def candidat_dashboard_view(request):
-    # Données fictives pour les candidatures
-    candidatures_fictives = [
-        {
-            'id': 1,
-            'poste': 'Développeur Full Stack',
-            'entreprise': 'TechCorp',
-            'date_candidature': '2025-08-25',
-            'statut': 'en_attente',
-            'statut_display': 'En attente',
-            'statut_color': 'yellow',
-            'score_ia': 85,
-            'cv_nom': 'CV_John_Doe.pdf',
-            'lettre_nom': 'Lettre_motivation.pdf',
-            'commentaires': 'Profil intéressant, compétences techniques solides.'
-        },
-        {
-            'id': 2,
-            'poste': 'Chef de Projet Digital',
-            'entreprise': 'InnovCorp',
-            'date_candidature': '2025-08-20',
-            'statut': 'accepte',
-            'statut_display': 'Accepté',
-            'statut_color': 'green',
-            'score_ia': 92,
-            'cv_nom': 'CV_John_Doe_v2.pdf',
-            'lettre_nom': 'Lettre_chef_projet.pdf',
-            'commentaires': 'Excellent profil ! Expérience parfaitement adaptée au poste.'
-        },
-        {
-            'id': 3,
-            'poste': 'Développeur Frontend',
-            'entreprise': 'StartupXYZ',
-            'date_candidature': '2025-08-15',
-            'statut': 'rejete',
-            'statut_display': 'Rejeté',
-            'statut_color': 'red',
-            'score_ia': 68,
-            'cv_nom': 'CV_John_Doe_old.pdf',
-            'lettre_nom': None,
-            'commentaires': 'Manque d\'expérience en React. Candidature ne correspond pas aux exigences.'
-        }
-    ]
+    # Récupérer les vraies candidatures de l'utilisateur connecté
+    candidatures = Candidature.objects.filter(candidat=request.user).order_by('-created_at')
     
-    # Calculer les statistiques
-    total_candidatures = len(candidatures_fictives)
-    candidatures_en_attente = len([c for c in candidatures_fictives if c['statut'] == 'en_attente'])
-    candidatures_acceptees = len([c for c in candidatures_fictives if c['statut'] == 'accepte'])
-    score_moyen = sum(c['score_ia'] for c in candidatures_fictives) // len(candidatures_fictives) if candidatures_fictives else 0
+    # Calculer les statistiques réelles
+    total_candidatures = candidatures.count()
+    candidatures_en_attente = candidatures.filter(status='en_attente').count()
+    candidatures_acceptees = candidatures.filter(status='acceptee').count()
+    candidatures_refusees = candidatures.filter(status='refusee').count()
+    
+    # Calculer le score moyen (uniquement pour les candidatures avec score IA)
+    candidatures_avec_score = candidatures.filter(score_ia__isnull=False)
+    if candidatures_avec_score.exists():
+        score_moyen = candidatures_avec_score.aggregate(
+            moyenne=models.Avg('score_ia')
+        )['moyenne']
+        score_moyen = round(score_moyen, 1) if score_moyen else 0
+    else:
+        score_moyen = 0
     
     context = {
         'title': 'Mon Compte - Suivi des candidatures',
-        'candidatures': candidatures_fictives,
+        'candidatures': candidatures,
         'user': request.user,
         'stats': {
             'total': total_candidatures,
             'en_attente': candidatures_en_attente,
             'acceptees': candidatures_acceptees,
+            'refusees': candidatures_refusees,
             'score_moyen': score_moyen
         }
     }
@@ -306,105 +278,37 @@ def recruiter_dashboard_view(request):
         messages.error(request, 'Accès non autorisé.')
         return redirect('account')
     
-    # Données fictives pour toutes les candidatures (vue recruteur)
-    toutes_candidatures = [
-        {
-            'id': 1,
-            'candidat_nom': 'John Doe',
-            'candidat_initiales': 'JD',
-            'candidat_email': 'john.doe@email.com',
-            'poste': 'Développeur Full Stack',
-            'entreprise': 'TechCorp',
-            'date_candidature': '2025-08-25',
-            'statut': 'en_attente',
-            'statut_display': 'En attente',
-            'statut_color': 'yellow',
-            'score_ia': 85,
-            'cv_nom': 'CV_John_Doe.pdf',
-            'lettre_nom': 'Lettre_motivation.pdf',
-            'urgent': False
-        },
-        {
-            'id': 2,
-            'candidat_nom': 'Jane Smith',
-            'candidat_initiales': 'JS',
-            'candidat_email': 'jane.smith@email.com',
-            'poste': 'Designer UX/UI',
-            'entreprise': 'CreativeCorp',
-            'date_candidature': '2025-08-24',
-            'statut': 'en_revision',
-            'statut_display': 'En révision',
-            'statut_color': 'blue',
-            'score_ia': 91,
-            'cv_nom': 'CV_Jane_Smith.pdf',
-            'lettre_nom': 'Lettre_Designer.pdf',
-            'urgent': False
-        },
-        {
-            'id': 3,
-            'candidat_nom': 'Mike Johnson',
-            'candidat_initiales': 'MJ',
-            'candidat_email': 'mike.j@email.com',
-            'poste': 'Chef de Projet Digital',
-            'entreprise': 'InnovCorp',
-            'date_candidature': '2025-08-20',
-            'statut': 'accepte',
-            'statut_display': 'Accepté',
-            'statut_color': 'green',
-            'score_ia': 92,
-            'cv_nom': 'CV_Mike_Johnson.pdf',
-            'lettre_nom': 'Lettre_chef_projet.pdf',
-            'urgent': False
-        },
-        {
-            'id': 4,
-            'candidat_nom': 'Sarah Wilson',
-            'candidat_initiales': 'SW',
-            'candidat_email': 'sarah.w@email.com',
-            'poste': 'Développeur Frontend',
-            'entreprise': 'StartupXYZ',
-            'date_candidature': '2025-08-15',
-            'statut': 'rejete',
-            'statut_display': 'Rejeté',
-            'statut_color': 'red',
-            'score_ia': 68,
-            'cv_nom': 'CV_Sarah_Wilson.pdf',
-            'lettre_nom': None,
-            'urgent': False
-        },
-        {
-            'id': 5,
-            'candidat_nom': 'Alex Brown',
-            'candidat_initiales': 'AB',
-            'candidat_email': 'alex.brown@email.com',
-            'poste': 'Data Scientist',
-            'entreprise': 'DataCorp',
-            'date_candidature': '2025-08-28',
-            'statut': 'nouveau',
-            'statut_display': 'Nouveau',
-            'statut_color': 'purple',
-            'score_ia': 88,
-            'cv_nom': 'CV_Alex_Brown.pdf',
-            'lettre_nom': 'Lettre_DataScience.pdf',
-            'urgent': False
-        }
-    ]
+    # Récupérer toutes les candidatures (les recruteurs voient tout)
+    candidatures = Candidature.objects.all().order_by('-created_at').select_related('candidat')
     
-    # Calculer les statistiques
-    total_candidatures = len(toutes_candidatures)
-    nouveau = len([c for c in toutes_candidatures if c['statut'] == 'nouveau'])
-    en_attente = len([c for c in toutes_candidatures if c['statut'] == 'en_attente'])
-    acceptees = len([c for c in toutes_candidatures if c['statut'] == 'accepte'])
+    # Calculer les statistiques réelles
+    total_candidatures = candidatures.count()
+    candidatures_nouvelles = candidatures.filter(status='en_attente').count()  # Nouveau = en_attente pour simplifier
+    candidatures_en_cours = candidatures.filter(status='en_cours').count()
+    candidatures_acceptees = candidatures.filter(status='acceptee').count()
+    candidatures_refusees = candidatures.filter(status='refusee').count()
+    
+    # Statistiques IA
+    candidatures_avec_score = candidatures.filter(score_ia__isnull=False)
+    score_moyen_global = 0
+    if candidatures_avec_score.exists():
+        score_moyen_global = candidatures_avec_score.aggregate(
+            moyenne=models.Avg('score_ia')
+        )['moyenne']
+        score_moyen_global = round(score_moyen_global, 1) if score_moyen_global else 0
     
     context = {
         'title': 'Dashboard Recruteur - Gestion des candidatures',
-        'candidatures': toutes_candidatures,
+        'candidatures': candidatures[:20],  # Limiter à 20 pour la performance
         'user': request.user,
         'stats': {
             'total': total_candidatures,
-            'nouveau': nouveau,
-            'en_attente': en_attente,
-            'acceptees': acceptees,
+            'nouveau': candidatures_nouvelles,
+            'en_attente': candidatures_nouvelles,  # Alias
+            'en_cours': candidatures_en_cours,
+            'acceptees': candidatures_acceptees,
+            'refusees': candidatures_refusees,
+            'score_moyen': score_moyen_global
         }
     }
     return render(request, 'pages/recruiter_dashboard.html', context)
@@ -424,107 +328,57 @@ def admin_dashboard_view(request):
 # page détails d'une candidature
 @login_required
 def candidature_detail_view(request, candidature_id):
-    # Données fictives pour les candidatures (même structure que account_view)
-    candidatures_fictives = [
-        {
-            'id': 1,
-            'poste': 'Développeur Full Stack',
-            'entreprise': 'TechCorp',
-            'date_candidature': '2025-08-25',
-            'statut': 'en_attente',
-            'statut_display': 'En attente',
-            'statut_color': 'yellow',
-            'score_ia': 85,
-            'cv_nom': 'CV_John_Doe.pdf',
-            'lettre_nom': 'Lettre_motivation.pdf',
-            'commentaires': 'Profil intéressant, compétences techniques solides.',
-            'competences_extraites': ['Python', 'Django', 'React', 'PostgreSQL', 'Docker'],
-            'points_forts': [
-                'Expérience solide en développement web',
-                'Maîtrise des frameworks modernes',
-                'Bonne connaissance des bases de données'
-            ],
-            'points_amelioration': [
-                'Manque d\'expérience en DevOps',
-                'Pourrait approfondir les tests unitaires'
-            ],
-            'timeline': [
-                {'date': '2025-08-25', 'action': 'Candidature soumise', 'status': 'completed'},
-                {'date': '2025-08-26', 'action': 'CV analysé par IA', 'status': 'completed'},
-                {'date': '2025-08-27', 'action': 'En cours de révision RH', 'status': 'current'},
+    try:
+        # Récupérer la candidature réelle depuis la base de données
+        candidature = Candidature.objects.select_related('candidat').get(id=candidature_id)
+        
+        # Vérifier les permissions
+        if request.user.role == 'candidat' and candidature.candidat != request.user:
+            messages.error(request, 'Vous n\'avez pas l\'autorisation de voir cette candidature.')
+            return redirect('account')
+        elif request.user.role not in ['candidat', 'recruteur', 'admin']:
+            messages.error(request, 'Accès non autorisé.')
+            return redirect('home')
+        
+        # Timeline générique (à améliorer plus tard avec un modèle dédié)
+        timeline_entries = [
+            {'date': candidature.created_at.strftime('%Y-%m-%d'), 'action': 'Candidature soumise', 'status': 'completed'},
+        ]
+        
+        if candidature.score_ia:
+            timeline_entries.append({
+                'date': candidature.created_at.strftime('%Y-%m-%d'), 
+                'action': f'CV analysé par IA (Score: {candidature.score_ia}%)', 
+                'status': 'completed'
+            })
+        
+        if candidature.status == 'en_cours':
+            timeline_entries.append({'date': '', 'action': 'En cours d\'examen par RH', 'status': 'current'})
+        elif candidature.status == 'acceptee':
+            timeline_entries.append({'date': '', 'action': 'Candidature acceptée !', 'status': 'completed'})
+        elif candidature.status == 'refusee':
+            timeline_entries.append({'date': '', 'action': 'Candidature non retenue', 'status': 'completed'})
+        else:  # en_attente
+            timeline_entries.append({'date': '', 'action': 'En attente d\'examen', 'status': 'current'})
+        
+        # Ajouter les étapes futures si pas encore terminé
+        if candidature.status not in ['acceptee', 'refusee']:
+            timeline_entries.extend([
                 {'date': '', 'action': 'Entretien téléphonique', 'status': 'pending'},
                 {'date': '', 'action': 'Entretien technique', 'status': 'pending'},
                 {'date': '', 'action': 'Décision finale', 'status': 'pending'}
-            ]
-        },
-        {
-            'id': 2,
-            'poste': 'Chef de Projet Digital',
-            'entreprise': 'InnovCorp',
-            'date_candidature': '2025-08-20',
-            'statut': 'accepte',
-            'statut_display': 'Accepté',
-            'statut_color': 'green',
-            'score_ia': 92,
-            'cv_nom': 'CV_John_Doe_v2.pdf',
-            'lettre_nom': 'Lettre_chef_projet.pdf',
-            'commentaires': 'Excellent profil ! Expérience parfaitement adaptée au poste.',
-            'competences_extraites': ['Gestion de projet', 'Scrum', 'Leadership', 'Digital', 'Analytics'],
-            'points_forts': [
-                'Leadership naturel et expérience managériale',
-                'Excellente connaissance des méthodologies agiles',
-                'Vision stratégique du digital'
-            ],
-            'points_amelioration': [],
-            'timeline': [
-                {'date': '2025-08-20', 'action': 'Candidature soumise', 'status': 'completed'},
-                {'date': '2025-08-21', 'action': 'CV analysé par IA', 'status': 'completed'},
-                {'date': '2025-08-22', 'action': 'Pré-sélectionné par RH', 'status': 'completed'},
-                {'date': '2025-08-24', 'action': 'Entretien téléphonique réussi', 'status': 'completed'},
-                {'date': '2025-08-26', 'action': 'Entretien final réussi', 'status': 'completed'},
-                {'date': '2025-08-28', 'action': 'Candidature acceptée !', 'status': 'completed'}
-            ]
-        },
-        {
-            'id': 3,
-            'poste': 'Développeur Frontend',
-            'entreprise': 'StartupXYZ',
-            'date_candidature': '2025-08-15',
-            'statut': 'rejete',
-            'statut_display': 'Rejeté',
-            'statut_color': 'red',
-            'score_ia': 68,
-            'cv_nom': 'CV_John_Doe_old.pdf',
-            'lettre_nom': None,
-            'commentaires': 'Manque d\'expérience en React. Candidature ne correspond pas aux exigences.',
-            'competences_extraites': ['HTML', 'CSS', 'JavaScript', 'Vue.js'],
-            'points_forts': [
-                'Bases solides en HTML/CSS',
-                'Créativité dans le design'
-            ],
-            'points_amelioration': [
-                'Manque d\'expérience avec React',
-                'Portfolio insuffisant',
-                'Pas de lettre de motivation'
-            ],
-            'timeline': [
-                {'date': '2025-08-15', 'action': 'Candidature soumise', 'status': 'completed'},
-                {'date': '2025-08-16', 'action': 'CV analysé par IA', 'status': 'completed'},
-                {'date': '2025-08-17', 'action': 'Rejeté par RH', 'status': 'completed'}
-            ]
+            ])
+        
+        # Ajouter la timeline à l'objet candidature pour le template
+        candidature.timeline = timeline_entries
+        
+        context = {
+            'title': f'Candidature - {candidature.poste}',
+            'candidature': candidature,
+            'user': request.user
         }
-    ]
-    
-    # Trouver la candidature par ID
-    candidature = next((c for c in candidatures_fictives if c['id'] == candidature_id), None)
-    
-    if not candidature:
+        return render(request, 'pages/candidature_detail.html', context)
+        
+    except Candidature.DoesNotExist:
         messages.error(request, 'Candidature non trouvée.')
         return redirect('account')
-    
-    context = {
-        'title': f'Candidature - {candidature["poste"]}',
-        'candidature': candidature,
-        'user': request.user
-    }
-    return render(request, 'pages/candidature_detail.html', context)

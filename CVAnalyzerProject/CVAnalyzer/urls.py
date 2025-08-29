@@ -42,9 +42,16 @@ urlpatterns = [
     path('check/', views.check_user_info, name='check-user'),
     path('admin-only/', views.admin_only, name='admin-only'),
     
-    # Sécurité (Étape 4)
+    # Sécurité 
     path('security/status/', security_views.security_status, name='security-status'),
     path('security/csrf-token/', security_views.get_csrf_token, name='csrf-token'),
     path('security/test-xss/', security_views.test_xss_protection, name='test-xss'),
     path('security/user-info/', security_views.user_security_info, name='user-security'),
+  
+  
+    # Vues Django
+    path('', views.home, name='home'),
+    path('login/', views.login_view, name='login'),
+    path('register/', views.register_view, name='register'),
+    path('logout/', views.logout_view, name='logout'),
 ]

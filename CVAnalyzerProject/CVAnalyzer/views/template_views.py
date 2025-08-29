@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse, Http404
 from django.views.decorators.csrf import csrf_exempt
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
@@ -11,6 +11,7 @@ from django.db import models
 from django.utils import timezone
 import os
 import json
+import mimetypes
 
 # Import des services IA
 from ..ai_services.text_extractor import TextExtractor
@@ -97,7 +98,7 @@ def logout_view(request):
 @login_required
 def upload_documents(request):
     """
-    Vue pour gérer l'upload de CV et l'analyse IA
+    Vue pour gérer l'upload de CV et lettre de motivation avec analyse IA
     """
     if request.method == 'POST':
         try:
@@ -109,36 +110,54 @@ def upload_documents(request):
                 })
             
             cv_file = request.FILES['cv']
+            lettre_file = request.FILES.get('lettre_motivation')  # Optionnel
             
-            # Validation du type de fichier
+            # Validation du type de fichier CV
             allowed_extensions = ['pdf', 'doc', 'docx']
-            file_extension = cv_file.name.split('.')[-1].lower()
+            cv_extension = cv_file.name.split('.')[-1].lower()
             
-            if file_extension not in allowed_extensions:
+            if cv_extension not in allowed_extensions:
                 return JsonResponse({
                     'success': False,
-                    'message': 'Format de fichier non supporté. Utilisez PDF, DOC ou DOCX.'
+                    'message': 'Format de fichier CV non supporté. Utilisez PDF, DOC ou DOCX.'
                 })
             
-            # Sauvegarde temporaire du fichier
-            file_path = default_storage.save(f'temp_cv/{cv_file.name}', ContentFile(cv_file.read()))
-            full_file_path = os.path.join(default_storage.location, file_path)
+            # Validation du type de lettre de motivation si présente
+            if lettre_file:
+                lettre_extension = lettre_file.name.split('.')[-1].lower()
+                if lettre_extension not in allowed_extensions:
+                    return JsonResponse({
+                        'success': False,
+                        'message': 'Format de fichier lettre de motivation non supporté. Utilisez PDF, DOC ou DOCX.'
+                    })
             
-            # Extraction du texte
+            # Sauvegarde temporaire du fichier CV
+            cv_path = default_storage.save(f'temp_cv/{cv_file.name}', ContentFile(cv_file.read()))
+            cv_full_path = os.path.join(default_storage.location, cv_path)
+            
+            # Sauvegarde temporaire de la lettre si présente
+            lettre_full_path = None
+            if lettre_file:
+                lettre_path = default_storage.save(f'temp_lettre/{lettre_file.name}', ContentFile(lettre_file.read()))
+                lettre_full_path = os.path.join(default_storage.location, lettre_path)
+            
+            # Extraction du texte du CV
             extractor = TextExtractor()
             
-            if file_extension == 'pdf':
-                extraction_result = extractor.extract_from_pdf(full_file_path)
+            if cv_extension == 'pdf':
+                extraction_result = extractor.extract_from_pdf(cv_full_path)
             else:  # doc/docx
-                extraction_result = extractor.extract_from_docx(full_file_path)
+                extraction_result = extractor.extract_from_docx(cv_full_path)
             
             if not extraction_result['success']:
-                # Nettoyage du fichier temporaire
-                if os.path.exists(full_file_path):
-                    os.remove(full_file_path)
+                # Nettoyage des fichiers temporaires
+                if os.path.exists(cv_full_path):
+                    os.remove(cv_full_path)
+                if lettre_full_path and os.path.exists(lettre_full_path):
+                    os.remove(lettre_full_path)
                 return JsonResponse({
                     'success': False,
-                    'message': f'Erreur lors de l\'extraction du texte: {extraction_result["error"]}'
+                    'message': f'Erreur lors de l\'extraction du texte du CV: {extraction_result["error"]}'
                 })
             
             extracted_text = extraction_result['text']
@@ -176,31 +195,40 @@ def upload_documents(request):
                 poste='Candidature spontanée',  # TODO: mettre des postes custom si on a le temps
                 entreprise='CIVIA Corp.', # TODO: mettre entreprise custom si on a le temps
                 cv=cv_file,
+                lettre_motivation=lettre_file if lettre_file else None,
                 status='en_attente',
                 score_ia=overall_score,
                 competences_extraites=skills_analysis,  # Correction: utiliser directement skills_analysis
                 commentaires=f'CV analysé automatiquement. Score: {overall_score}% - GPU: {gpu_info.get("gpu_available", False)}'
             )
             
-            # Nettoyage du fichier temporaire
-            if os.path.exists(full_file_path):
-                os.remove(full_file_path)
+            # Nettoyage des fichiers temporaires
+            if os.path.exists(cv_full_path):
+                os.remove(cv_full_path)
+            if lettre_full_path and os.path.exists(lettre_full_path):
+                os.remove(lettre_full_path)
             
             return JsonResponse({
                 'success': True,
-                'message': 'CV analysé avec succès !',
+                'message': 'Candidature analysée avec succès !',
                 'data': {
                     'candidature_id': candidature.id,
                     'score_ia': overall_score,
                     'competences_trouvees': len(skills_analysis.get('skills', [])),
+                    'documents_soumis': {
+                        'cv': cv_file.name,
+                        'lettre': lettre_file.name if lettre_file else None
+                    },
                     'redirect_url': f'/account/{candidature.id}/'
                 }
             })
             
         except Exception as e:
             # Nettoyage en cas d'erreur
-            if 'full_file_path' in locals() and os.path.exists(full_file_path):
-                os.remove(full_file_path)
+            if 'cv_full_path' in locals() and os.path.exists(cv_full_path):
+                os.remove(cv_full_path)
+            if 'lettre_full_path' in locals() and lettre_full_path and os.path.exists(lettre_full_path):
+                os.remove(lettre_full_path)
             
             return JsonResponse({
                 'success': False,
@@ -524,3 +552,159 @@ def changer_statut_candidature(request, candidature_id):
             messages.error(request, 'Candidature non trouvée.')
     
     return redirect('recruiter-dashboard')
+
+
+@login_required
+def download_cv(request, candidature_id):
+    """
+    Vue pour télécharger le CV d'une candidature
+    """
+    try:
+        candidature = Candidature.objects.get(id=candidature_id)
+        
+        # Vérifier les permissions
+        if request.user.role == 'candidat' and candidature.candidat != request.user:
+            messages.error(request, 'Vous n\'avez pas l\'autorisation de télécharger ce document.')
+            return redirect('account')
+        elif request.user.role not in ['candidat', 'recruteur', 'admin']:
+            messages.error(request, 'Accès non autorisé.')
+            return redirect('home')
+        
+        if not candidature.cv:
+            raise Http404("CV non trouvé")
+        
+        # Obtenir le fichier
+        file_path = candidature.cv.path
+        if not os.path.exists(file_path):
+            raise Http404("Fichier CV non trouvé sur le disque")
+        
+        # Déterminer le type MIME
+        mime_type, _ = mimetypes.guess_type(file_path)
+        if mime_type is None:
+            mime_type = 'application/octet-stream'
+        
+        # Lire le fichier et retourner la réponse
+        with open(file_path, 'rb') as file:
+            response = HttpResponse(file.read(), content_type=mime_type)
+            response['Content-Disposition'] = f'attachment; filename="{candidature.cv.name.split("/")[-1]}"'
+            return response
+            
+    except Candidature.DoesNotExist:
+        raise Http404("Candidature non trouvée")
+
+
+@login_required
+def download_lettre(request, candidature_id):
+    """
+    Vue pour télécharger la lettre de motivation d'une candidature
+    """
+    try:
+        candidature = Candidature.objects.get(id=candidature_id)
+        
+        # Vérifier les permissions
+        if request.user.role == 'candidat' and candidature.candidat != request.user:
+            messages.error(request, 'Vous n\'avez pas l\'autorisation de télécharger ce document.')
+            return redirect('account')
+        elif request.user.role not in ['candidat', 'recruteur', 'admin']:
+            messages.error(request, 'Accès non autorisé.')
+            return redirect('home')
+        
+        if not candidature.lettre_motivation:
+            raise Http404("Lettre de motivation non trouvée")
+        
+        # Obtenir le fichier
+        file_path = candidature.lettre_motivation.path
+        if not os.path.exists(file_path):
+            raise Http404("Fichier lettre de motivation non trouvé sur le disque")
+        
+        # Déterminer le type MIME
+        mime_type, _ = mimetypes.guess_type(file_path)
+        if mime_type is None:
+            mime_type = 'application/octet-stream'
+        
+        # Lire le fichier et retourner la réponse
+        with open(file_path, 'rb') as file:
+            response = HttpResponse(file.read(), content_type=mime_type)
+            response['Content-Disposition'] = f'attachment; filename="{candidature.lettre_motivation.name.split("/")[-1]}"'
+            return response
+            
+    except Candidature.DoesNotExist:
+        raise Http404("Candidature non trouvée")
+
+
+@login_required
+def view_cv(request, candidature_id):
+    """
+    Vue pour visualiser le CV dans le navigateur
+    """
+    try:
+        candidature = Candidature.objects.get(id=candidature_id)
+        
+        # Vérifier les permissions
+        if request.user.role == 'candidat' and candidature.candidat != request.user:
+            messages.error(request, 'Vous n\'avez pas l\'autorisation de voir ce document.')
+            return redirect('account')
+        elif request.user.role not in ['candidat', 'recruteur', 'admin']:
+            messages.error(request, 'Accès non autorisé.')
+            return redirect('home')
+        
+        if not candidature.cv:
+            raise Http404("CV non trouvé")
+        
+        # Obtenir le fichier
+        file_path = candidature.cv.path
+        if not os.path.exists(file_path):
+            raise Http404("Fichier CV non trouvé sur le disque")
+        
+        # Déterminer le type MIME
+        mime_type, _ = mimetypes.guess_type(file_path)
+        if mime_type is None:
+            mime_type = 'application/octet-stream'
+        
+        # Lire le fichier et retourner pour visualisation
+        with open(file_path, 'rb') as file:
+            response = HttpResponse(file.read(), content_type=mime_type)
+            # Pas de Content-Disposition pour permettre la visualisation dans le navigateur
+            return response
+            
+    except Candidature.DoesNotExist:
+        raise Http404("Candidature non trouvée")
+
+
+@login_required
+def view_lettre(request, candidature_id):
+    """
+    Vue pour visualiser la lettre de motivation dans le navigateur
+    """
+    try:
+        candidature = Candidature.objects.get(id=candidature_id)
+        
+        # Vérifier les permissions
+        if request.user.role == 'candidat' and candidature.candidat != request.user:
+            messages.error(request, 'Vous n\'avez pas l\'autorisation de voir ce document.')
+            return redirect('account')
+        elif request.user.role not in ['candidat', 'recruteur', 'admin']:
+            messages.error(request, 'Accès non autorisé.')
+            return redirect('home')
+        
+        if not candidature.lettre_motivation:
+            raise Http404("Lettre de motivation non trouvée")
+        
+        # Obtenir le fichier
+        file_path = candidature.lettre_motivation.path
+        if not os.path.exists(file_path):
+            raise Http404("Fichier lettre de motivation non trouvé sur le disque")
+        
+        # Déterminer le type MIME
+        mime_type, _ = mimetypes.guess_type(file_path)
+        if mime_type is None:
+            mime_type = 'application/octet-stream'
+        
+        # Lire le fichier et retourner pour visualisation
+        with open(file_path, 'rb') as file:
+            response = HttpResponse(file.read(), content_type=mime_type)
+            # Pas de Content-Disposition pour permettre la visualisation dans le navigateur
+            return response
+            
+    except Candidature.DoesNotExist:
+        raise Http404("Candidature non trouvée")

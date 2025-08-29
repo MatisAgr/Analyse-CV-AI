@@ -24,24 +24,29 @@
                     <p class="text-xl text-gray-600">{{ candidature.entreprise }}</p>
                     <p class="text-sm text-gray-500 mt-2">
                         <i class="fas fa-calendar mr-1"></i>
-                        Candidature soumise le {{ candidature.date_candidature|date:"d M Y" }}
+                        Candidature soumise le {{ candidature.created_at|date:"d M Y" }}
                     </p>
                 </div>
                 <div class="text-right">
-                    {% if candidature.statut_color == 'green' %}
+                    {% if candidature.status == 'acceptee' %}
                         <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-green-100 text-green-800">
                             <i class="fas fa-check-circle mr-2"></i>
-                            {{ candidature.statut_display }}
+                            Acceptée
                         </span>
-                    {% elif candidature.statut_color == 'yellow' %}
-                        <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
-                            <i class="fas fa-clock mr-2"></i>
-                            {{ candidature.statut_display }}
+                    {% elif candidature.status == 'en_cours' %}
+                        <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                            <i class="fas fa-eye mr-2"></i>
+                            En cours
                         </span>
-                    {% elif candidature.statut_color == 'red' %}
+                    {% elif candidature.status == 'refusee' %}
                         <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-red-100 text-red-800">
                             <i class="fas fa-times-circle mr-2"></i>
-                            {{ candidature.statut_display }}
+                            Refusée
+                        </span>
+                    {% else %}
+                        <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                            <i class="fas fa-clock mr-2"></i>
+                            En attente
                         </span>
                     {% endif %}
                 </div>
@@ -333,33 +338,47 @@
                     </h3>
                     
                     <div class="space-y-3">
-                        {% if candidature.cv_nom %}
+                        {% if candidature.cv %}
                             <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg">
                                 <div class="flex items-center">
                                     <i class="fas fa-file-pdf text-red-500 mr-3"></i>
                                     <div>
                                         <p class="text-sm font-medium text-gray-900">CV</p>
-                                        <p class="text-xs text-gray-500">{{ candidature.cv_nom }}</p>
+                                        <p class="text-xs text-gray-500">{{ candidature.cv.name|slice:"13:" }}</p>
                                     </div>
                                 </div>
-                                <button onclick="showAlert()" class="text-indigo-600 hover:text-indigo-800">
-                                    <i class="fas fa-download"></i>
-                                </button>
+                                <div class="flex space-x-2">
+                                    <a href="{% url 'view-cv' candidature.id %}" target="_blank" 
+                                       class="text-blue-600 hover:text-blue-800" title="Visualiser">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'download-cv' candidature.id %}" 
+                                       class="text-indigo-600 hover:text-indigo-800" title="Télécharger">
+                                        <i class="fas fa-download"></i>
+                                    </a>
+                                </div>
                             </div>
                         {% endif %}
 
-                        {% if candidature.lettre_nom %}
+                        {% if candidature.lettre_motivation %}
                             <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
                                 <div class="flex items-center">
                                     <i class="fas fa-file-alt text-blue-500 mr-3"></i>
                                     <div>
                                         <p class="text-sm font-medium text-gray-900">Lettre de motivation</p>
-                                        <p class="text-xs text-gray-500">{{ candidature.lettre_nom }}</p>
+                                        <p class="text-xs text-gray-500">{{ candidature.lettre_motivation.name|slice:"17:" }}</p>
                                     </div>
                                 </div>
-                                <button class="text-indigo-600 hover:text-indigo-800">
-                                    <i class="fas fa-download"></i>
-                                </button>
+                                <div class="flex space-x-2">
+                                    <a href="{% url 'view-lettre' candidature.id %}" target="_blank" 
+                                       class="text-blue-600 hover:text-blue-800" title="Visualiser">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'download-lettre' candidature.id %}" 
+                                       class="text-indigo-600 hover:text-indigo-800" title="Télécharger">
+                                        <i class="fas fa-download"></i>
+                                    </a>
+                                </div>
                             </div>
                         {% else %}
                             <div class="p-3 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">

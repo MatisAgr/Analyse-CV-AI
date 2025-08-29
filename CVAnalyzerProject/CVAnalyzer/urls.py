@@ -84,6 +84,12 @@ urlpatterns = [
     path('candidature/<int:candidature_id>/refuser/', template_views.refuser_candidature, name='refuser-candidature'),
     path('candidature/<int:candidature_id>/changer-statut/', template_views.changer_statut_candidature, name='changer-statut-candidature'),
     
+    # Téléchargement et visualisation de documents
+    path('candidature/<int:candidature_id>/cv/download/', template_views.download_cv, name='download-cv'),
+    path('candidature/<int:candidature_id>/lettre/download/', template_views.download_lettre, name='download-lettre'),
+    path('candidature/<int:candidature_id>/cv/view/', template_views.view_cv, name='view-cv'),
+    path('candidature/<int:candidature_id>/lettre/view/', template_views.view_lettre, name='view-lettre'),
+    
     # Fonctionnalités
     path('upload/', template_views.upload_documents, name='upload-documents'),
     path('auth-status/', template_views.check_auth_status, name='auth-status'),

@@ -11,7 +11,7 @@ pip install -r requirements.txt
 
 ## Lancement
 ```bash
-cd CVAnalyserProject
+cd CVAnalyzerProject
 python manage.py runserver
 ```
 

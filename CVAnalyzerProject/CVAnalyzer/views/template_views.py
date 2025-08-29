@@ -371,11 +371,31 @@ def candidature_detail_view(request, candidature_id):
         
         # Ajouter la timeline à l'objet candidature pour le template
         candidature.timeline = timeline_entries
-        
+
+        # statistiques du candidat
+        candidat = candidature.candidat
+        candidat_qs = Candidature.objects.filter(candidat=candidat)
+        total_candidat = candidat_qs.count()
+        accepte_candidat = candidat_qs.filter(status='acceptee').count()
+        # scores uniquement lorsque non null
+        qs_scores = candidat_qs.filter(score_ia__isnull=False)
+        avg_score_candidat = None
+        if qs_scores.exists():
+            avg = qs_scores.aggregate(avg=models.Avg('score_ia'))['avg']
+            if avg is not None:
+                avg_score_candidat = round(avg, 1)
+
+        candidate_stats = {
+            'total': total_candidat,
+            'accepted': accepte_candidat,
+            'avg_score': avg_score_candidat
+        }
+
         context = {
             'title': f'Candidature - {candidature.poste}',
             'candidature': candidature,
-            'user': request.user
+            'user': request.user,
+                'candidate_stats': candidate_stats
         }
         return render(request, 'pages/candidature_detail.html', context)
         

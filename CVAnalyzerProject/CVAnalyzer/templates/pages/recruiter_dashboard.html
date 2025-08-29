@@ -170,10 +170,10 @@
                                     <div class="flex-shrink-0 h-10 w-10">
                                         <div class="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
                                             <span class="text-sm font-medium text-indigo-600">
-                                                {% if candidature.candidat_initiales %}
-                                                    {{ candidature.candidat_initiales }}
+                                                {% if candidature.candidat.first_name and candidature.candidat.last_name %}
+                                                    {{ candidature.candidat.first_name|first|upper }}{{ candidature.candidat.last_name|first|upper }}
                                                 {% else %}
-                                                    ??
+                                                    {{ candidature.candidat.username|first|upper }}{{ candidature.candidat.username|slice:"1:2"|upper }}
                                                 {% endif %}
                                             </span>
                                         </div>
@@ -267,10 +267,10 @@
         <!-- Pagination -->
         <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 mt-6 rounded-lg shadow-md">
             <div class="flex-1 flex justify-between sm:hidden">
-                <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                <a onclick="showAlert()" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                     Précédent
                 </a>
-                <a href="#" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                <a onclick="showAlert()" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                     Suivant
                 </a>
             </div>
@@ -283,13 +283,13 @@
                 </div>
                 <div>
                     <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                        <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        <a onclick="showAlert()" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
                             <i class="fas fa-chevron-left"></i>
                         </a>
-                        <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        <a onclick="showAlert()" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
                             1
                         </a>
-                        <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        <a onclick="showAlert()" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
                             <i class="fas fa-chevron-right"></i>
                         </a>
                     </nav>
@@ -319,5 +319,9 @@
             });
         }
     });
+
+      function showAlert() {
+        alert("Et non pas le temps !");
+    }
 </script>
 {% endblock %}

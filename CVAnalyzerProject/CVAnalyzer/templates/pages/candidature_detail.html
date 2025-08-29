@@ -53,7 +53,7 @@
                     <i class="fas fa-arrow-left mr-2"></i>
                     Retour à mes candidatures
                 </a>
-                <button class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700">
+                <button onclick="showAlert()" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700">
                     <i class="fas fa-download mr-2"></i>
                     Télécharger le dossier
                 </button>
@@ -90,7 +90,7 @@
                                     </div>
                                     <p class="text-xs text-gray-500 mt-1">
                                         <i class="fas fa-robot mr-1"></i>
-                                        Analysé par IA GPU ({{ candidature.score_ia|floatformat:1 }}/100)
+                                        Score IA ({{ candidature.score_ia|floatformat:1 }}/100)
                                     </p>
                                 {% else %}
                                     <div class="text-2xl font-bold text-gray-400">
@@ -229,6 +229,102 @@
             <!-- Colonne latérale -->
             <div class="space-y-6">
                 
+                <!-- Informations candidat -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                        <i class="fas fa-user text-indigo-600 mr-2"></i>
+                        Profil du candidat
+                    </h3>
+                    
+                    <div class="space-y-4">
+                        <!-- Photo/Avatar -->
+                        <div class="flex items-center space-x-4">
+                            <div class="flex-shrink-0 h-16 w-16">
+                                <div class="h-16 w-16 rounded-full bg-indigo-100 flex items-center justify-center">
+                                    <span class="text-xl font-bold text-indigo-600">
+                                        {% if candidature.candidat.first_name and candidature.candidat.last_name %}
+                                            {{ candidature.candidat.first_name|first|upper }}{{ candidature.candidat.last_name|first|upper }}
+                                        {% else %}
+                                            {{ candidature.candidat.username|first|upper }}
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-semibold text-gray-900">
+                                    {{ candidature.candidat.first_name }} {{ candidature.candidat.last_name }}
+                                </h4>
+                                <p class="text-sm text-gray-500">Candidat depuis {{ candidature.candidat.date_joined|date:"M Y" }}</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Informations de contact -->
+                        <div class="border-t pt-4">
+                            <h5 class="text-sm font-medium text-gray-900 mb-3">Contact</h5>
+                            <div class="space-y-2">
+                                <div class="flex items-center text-sm">
+                                    <i class="fas fa-envelope text-gray-400 mr-3 w-4"></i>
+                                    <span class="text-gray-600">{{ candidature.candidat.email }}</span>
+                                </div>
+                                {% if candidature.candidat.phone %}
+                                <div class="flex items-center text-sm">
+                                    <i class="fas fa-phone text-gray-400 mr-3 w-4"></i>
+                                    <span class="text-gray-600">{{ candidature.candidat.phone }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Statistiques candidat -->
+                        <div class="border-t pt-4">
+                            <h5 class="text-sm font-medium text-gray-900 mb-3">Activité</h5>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="text-center p-2 bg-blue-50 rounded-lg">
+                                    <div class="text-lg font-bold text-blue-600">{{ candidate_stats.total }}</div>
+                                    <div class="text-xs text-gray-500">Candidatures</div>
+                                </div>
+                                <div class="text-center p-2 bg-green-50 rounded-lg">
+                                    <div class="text-lg font-bold text-green-600">
+                                        {{ candidate_stats.accepted }}
+                                    </div>
+                                    <div class="text-xs text-gray-500">Acceptées</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Score moyen -->
+                        <div class="border-t pt-4">
+                            <h5 class="text-sm font-medium text-gray-900 mb-3">Performance IA</h5>
+                            <div class="bg-gray-50 rounded-lg p-3">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm text-gray-600">Score moyen</span>
+                                    <span class="text-sm font-medium text-gray-900">
+                                        {% if candidate_stats.avg_score %}
+                                            {{ candidate_stats.avg_score }}%
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Actions candidat -->
+                        <div class="border-t pt-4">
+                            <div class="space-y-2">
+                                <button onclick="showAlert()" class="w-full flex items-center justify-center px-3 py-2 text-sm bg-gray-50 text-gray-700 rounded-md hover:bg-gray-100">
+                                    <i class="fas fa-history mr-2"></i>
+                                    Voir toutes ses candidatures
+                                </button>
+                                <button onclick="showAlert()" class="w-full flex items-center justify-center px-3 py-2 text-sm bg-gray-50 text-gray-700 rounded-md hover:bg-gray-100">
+                                    <i class="fas fa-envelope mr-2"></i>
+                                    Contacter le candidat
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
                 <!-- Documents -->
                 <div class="bg-white rounded-lg shadow-md p-6">
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">
@@ -246,7 +342,7 @@
                                         <p class="text-xs text-gray-500">{{ candidature.cv_nom }}</p>
                                     </div>
                                 </div>
-                                <button class="text-indigo-600 hover:text-indigo-800">
+                                <button onclick="showAlert()" class="text-indigo-600 hover:text-indigo-800">
                                     <i class="fas fa-download"></i>
                                 </button>
                             </div>
@@ -297,16 +393,16 @@
                     </h3>
                     
                     <div class="space-y-3">
-                        <button class="w-full flex items-center justify-center px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700">
+                        <button onclick="showAlert()" class="w-full flex items-center justify-center px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700">
                             <i class="fas fa-edit mr-2"></i>
                             Modifier candidature
                         </button>
-                        <button class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50">
+                        <button onclick="showAlert()" class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50">
                             <i class="fas fa-copy mr-2"></i>
                             Dupliquer pour autre poste
                         </button>
                         {% if candidature.statut != 'accepte' %}
-                        <button class="w-full flex items-center justify-center px-4 py-2 border border-red-300 text-red-700 rounded-md text-sm font-medium hover:bg-red-50">
+                        <button onclick="showAlert()" class="w-full flex items-center justify-center px-4 py-2 border border-red-300 text-red-700 rounded-md text-sm font-medium hover:bg-red-50">
                             <i class="fas fa-times mr-2"></i>
                             Retirer candidature
                         </button>
@@ -323,7 +419,12 @@
 
 {% block extra_js %}
 <script>
-    // Fonctions pour les actions (à implémenter plus tard)
+    //TODO: actions (à implémenter plus tard)
     console.log('Page détails candidature #{{ candidature.id }} chargée');
+
+      function showAlert() {
+        alert("Et non pas le temps !");
+    }
+
 </script>
 {% endblock %}

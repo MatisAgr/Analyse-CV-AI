@@ -3,7 +3,7 @@ from .views import api_views  # Import des vues API
 from .views import template_views  # Import des vues templates
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from . import security_views
+from .views import security_views
 
 @api_view(['GET'])
 def api_status(request):

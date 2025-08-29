@@ -98,10 +98,9 @@ class DatasetManager:
             print(f"Erreur lors du préprocessing: {e}")
             return None
     
+    # on reprend une partie du dataset ici
     def get_sample_data(self, n=5):
-        """
-        Retourne un échantillon du dataset
-        """
+    
         if self.processed_data is None:
             self.load_and_explore_dataset()
         
@@ -109,10 +108,8 @@ class DatasetManager:
             return self.processed_data.head(n)
         return None
 
+# initialisation du dataset
 def initialize_dataset():
-    """
-    Fonction utilitaire pour initialiser le dataset
-    """
     manager = DatasetManager()
     return manager.download_kaggle_dataset()
 

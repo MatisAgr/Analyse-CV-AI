@@ -4,11 +4,8 @@ import os
 from typing import Optional, Dict
 from pathlib import Path
 
+# classe pour extraire le texte des différents types de fichier 
 class TextExtractor:
-    """
-    Extracteur de texte pour différents formats de fichiers
-    """
-    
     @staticmethod
     def extract_from_pdf(file_path: str) -> Dict[str, any]:
         try:
@@ -36,9 +33,6 @@ class TextExtractor:
     
     @staticmethod
     def extract_from_docx(file_path: str) -> Dict[str, any]:
-        """
-        Extrait le texte d'un fichier DOCX
-        """
         try:
             doc = docx.Document(file_path)
             text = ""
@@ -69,9 +63,6 @@ class TextExtractor:
     
     @staticmethod
     def extract_from_txt(file_path: str) -> Dict[str, any]:
-        """
-        Extrait le texte d'un fichier TXT
-        """
         try:
             with open(file_path, 'r', encoding='utf-8') as file:
                 text = file.read()

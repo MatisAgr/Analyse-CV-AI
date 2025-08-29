@@ -9,10 +9,10 @@ from django.middleware.csrf import get_token
 from django.http import JsonResponse
 
 
+# vérif de la sécurité
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def security_status(request):
-    """Endpoint pour vérifier les mesures de sécurité actives"""
     return Response({
         'security_measures': {
             'csrf_protection': 'ACTIVE' if 'django.middleware.csrf.CsrfViewMiddleware' in request.META.get('HTTP_HOST', '') else 'CONFIGURED',
@@ -35,14 +35,12 @@ def security_status(request):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def get_csrf_token(request):
-    """Obtenir un token CSRF pour les tests frontend"""
     return JsonResponse({'csrf_token': get_token(request)})
 
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def test_xss_protection(request):
-    """Tester la protection XSS - input sanitization"""
     user_input = request.data.get('input', '')
     
     import html
@@ -59,7 +57,6 @@ def test_xss_protection(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def user_security_info(request):
-    """Informations de sécurité sur l'utilisateur connecté"""
     return Response({
         'user_security': {
             'user_id': request.user.id,

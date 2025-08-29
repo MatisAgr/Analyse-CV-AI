@@ -102,7 +102,7 @@ def upload_documents(request):
     """
     if request.method == 'POST':
         try:
-            # Vérification qu'un fichier CV est présent
+            # vérification qu'un fichier CV est présent
             if 'cv' not in request.FILES:
                 return JsonResponse({
                     'success': False,
@@ -110,9 +110,9 @@ def upload_documents(request):
                 })
             
             cv_file = request.FILES['cv']
-            lettre_file = request.FILES.get('lettre_motivation')  # Optionnel
+            lettre_file = request.FILES.get('lettre_motivation')  # optionnel
             
-            # Validation du type de fichier CV
+            # validation du type de fichier CV
             allowed_extensions = ['pdf', 'doc', 'docx']
             cv_extension = cv_file.name.split('.')[-1].lower()
             
@@ -122,7 +122,7 @@ def upload_documents(request):
                     'message': 'Format de fichier CV non supporté. Utilisez PDF, DOC ou DOCX.'
                 })
             
-            # Validation du type de lettre de motivation si présente
+            # validation du type de lettre de motivation si présente
             if lettre_file:
                 lettre_extension = lettre_file.name.split('.')[-1].lower()
                 if lettre_extension not in allowed_extensions:
@@ -131,17 +131,15 @@ def upload_documents(request):
                         'message': 'Format de fichier lettre de motivation non supporté. Utilisez PDF, DOC ou DOCX.'
                     })
             
-            # Sauvegarde temporaire du fichier CV
+            # sauvegarde temporaire du fichier CV
             cv_path = default_storage.save(f'temp_cv/{cv_file.name}', ContentFile(cv_file.read()))
             cv_full_path = os.path.join(default_storage.location, cv_path)
             
-            # Sauvegarde temporaire de la lettre si présente
             lettre_full_path = None
             if lettre_file:
                 lettre_path = default_storage.save(f'temp_lettre/{lettre_file.name}', ContentFile(lettre_file.read()))
                 lettre_full_path = os.path.join(default_storage.location, lettre_path)
             
-            # Extraction du texte du CV
             extractor = TextExtractor()
             
             if cv_extension == 'pdf':
@@ -150,7 +148,7 @@ def upload_documents(request):
                 extraction_result = extractor.extract_from_docx(cv_full_path)
             
             if not extraction_result['success']:
-                # Nettoyage des fichiers temporaires
+                # nettoyage des fichiers temporaires
                 if os.path.exists(cv_full_path):
                     os.remove(cv_full_path)
                 if lettre_full_path and os.path.exists(lettre_full_path):
@@ -162,21 +160,21 @@ def upload_documents(request):
             
             extracted_text = extraction_result['text']
             
-            # Analyse IA du CV avec optimisations GPU
+            # analyse IA du CV avec optimisations GPU
             analyzer = CVAnalyzer()
             
-            # Affichage des informations GPU
+            # affichage des informations GPU
             gpu_info = analyzer.get_gpu_info()
             print(f"🔧 Configuration GPU: {gpu_info}")
             
             try:
-                # Analyse des compétences
+                # analyse des compétences
                 skills_analysis = analyzer.extract_skills(extracted_text)
-                
-                # Analyse de l'expérience
+
+                # analyse de l'expérience
                 experience_analysis = analyzer.extract_experience(extracted_text)
                 
-                # Calcul du score global
+                # calcul du score global
                 overall_score = analyzer.calculate_overall_score({
                     'skills': skills_analysis,
                     'experience': experience_analysis,
@@ -186,10 +184,8 @@ def upload_documents(request):
                 print(f"✅ Analyse terminée - Score: {overall_score}% (GPU: {gpu_info.get('gpu_available', False)})")
                 
             finally:
-                # Nettoyage de la mémoire GPU après traitement
                 analyzer.cleanup_gpu_memory()
             
-            # Création de la candidature en base de données
             candidature = Candidature.objects.create(
                 candidat=request.user,
                 poste='Candidature spontanée',  # TODO: mettre des postes custom si on a le temps
@@ -198,11 +194,11 @@ def upload_documents(request):
                 lettre_motivation=lettre_file if lettre_file else None,
                 status='en_attente',
                 score_ia=overall_score,
-                competences_extraites=skills_analysis,  # Correction: utiliser directement skills_analysis
+                competences_extraites=skills_analysis,
                 commentaires=f'CV analysé automatiquement. Score: {overall_score}% - GPU: {gpu_info.get("gpu_available", False)}'
             )
             
-            # Nettoyage des fichiers temporaires
+            # nettoyage des fichiers temporaires
             if os.path.exists(cv_full_path):
                 os.remove(cv_full_path)
             if lettre_full_path and os.path.exists(lettre_full_path):
@@ -240,7 +236,7 @@ def upload_documents(request):
 # check si le user est co
 def check_auth_status(request):
     if request.user.is_authenticated:
-        # nom d'affichage (prénom + nom ou email si pas de nom (n'arrivera jamais))
+        # nom d'affichage
         display_name = f"{request.user.first_name} {request.user.last_name}".strip()
         if not display_name:
             display_name = request.user.email
@@ -256,26 +252,23 @@ def check_auth_status(request):
 # page compte utilisateur
 @login_required
 def account_view(request):
-    # Rediriger selon le rôle
     if request.user.role == 'recruteur' or request.user.role == 'admin':
         return redirect('recruiter-dashboard')
     else:
         return candidat_dashboard_view(request)
 
 
-# Dashboard candidat
+# dashboard candidat
 @login_required
 def candidat_dashboard_view(request):
-    # Récupérer les vraies candidatures de l'utilisateur connecté
     candidatures = Candidature.objects.filter(candidat=request.user).order_by('-created_at')
     
-    # Calculer les statistiques réelles
+    # calculer les statistiques réelles
     total_candidatures = candidatures.count()
     candidatures_en_attente = candidatures.filter(status='en_attente').count()
     candidatures_acceptees = candidatures.filter(status='acceptee').count()
     candidatures_refusees = candidatures.filter(status='refusee').count()
     
-    # Calculer le score moyen (uniquement pour les candidatures avec score IA)
     candidatures_avec_score = candidatures.filter(score_ia__isnull=False)
     if candidatures_avec_score.exists():
         score_moyen = candidatures_avec_score.aggregate(
@@ -300,24 +293,22 @@ def candidat_dashboard_view(request):
     return render(request, 'pages/account.html', context)
 
 
-# Dashboard recruteur
+# dashboard recruteur
 @login_required
 def recruiter_dashboard_view(request):
     if request.user.role not in ['recruteur', 'admin']:
         messages.error(request, 'Accès non autorisé.')
         return redirect('account')
     
-    # Récupérer toutes les candidatures (les recruteurs voient tout)
     candidatures = Candidature.objects.all().order_by('-created_at').select_related('candidat')
     
-    # Calculer les statistiques réelles
     total_candidatures = candidatures.count()
-    candidatures_nouvelles = candidatures.filter(status='en_attente').count()  # Nouveau = en_attente pour simplifier
+    candidatures_nouvelles = candidatures.filter(status='en_attente').count()  # nouveau = en_attente pour simplifier
     candidatures_en_cours = candidatures.filter(status='en_cours').count()
     candidatures_acceptees = candidatures.filter(status='acceptee').count()
     candidatures_refusees = candidatures.filter(status='refusee').count()
     
-    # Statistiques IA
+    # statistiques IA
     candidatures_avec_score = candidatures.filter(score_ia__isnull=False)
     score_moyen_global = 0
     if candidatures_avec_score.exists():
@@ -328,12 +319,12 @@ def recruiter_dashboard_view(request):
     
     context = {
         'title': 'Dashboard Recruteur - Gestion des candidatures',
-        'candidatures': candidatures[:20],  # Limiter à 20 pour la performance
+        'candidatures': candidatures[:20],  # limiter à 20 pour la performance
         'user': request.user,
         'stats': {
             'total': total_candidatures,
             'nouveau': candidatures_nouvelles,
-            'en_attente': candidatures_nouvelles,  # Alias
+            'en_attente': candidatures_nouvelles, 
             'en_cours': candidatures_en_cours,
             'acceptees': candidatures_acceptees,
             'refusees': candidatures_refusees,
@@ -343,14 +334,14 @@ def recruiter_dashboard_view(request):
     return render(request, 'pages/recruiter_dashboard.html', context)
 
 
-# Dashboard admin (placeholder)
+# dashboard admin (placeholder)
 @login_required
 def admin_dashboard_view(request):
     if request.user.role != 'admin':
         messages.error(request, 'Accès non autorisé.')
         return redirect('account')
     
-    # Pour l'instant, rediriger vers le dashboard recruteur
+    #pour l'instant, rediriger vers le dashboard recruteur
     return recruiter_dashboard_view(request)
 
 
@@ -358,10 +349,10 @@ def admin_dashboard_view(request):
 @login_required
 def candidature_detail_view(request, candidature_id):
     try:
-        # Récupérer la candidature réelle depuis la base de données
+        # récupérer la candidature réelle depuis la base de données
         candidature = Candidature.objects.select_related('candidat').get(id=candidature_id)
         
-        # Vérifier les permissions
+        # vérifier les permissions
         if request.user.role == 'candidat' and candidature.candidat != request.user:
             messages.error(request, 'Vous n\'avez pas l\'autorisation de voir cette candidature.')
             return redirect('account')
@@ -369,7 +360,7 @@ def candidature_detail_view(request, candidature_id):
             messages.error(request, 'Accès non autorisé.')
             return redirect('home')
         
-        # Timeline générique (à améliorer plus tard avec un modèle dédié)
+        # timeline générique
         timeline_entries = [
             {'date': candidature.created_at.strftime('%Y-%m-%d'), 'action': 'Candidature soumise', 'status': 'completed'},
         ]
@@ -390,15 +381,13 @@ def candidature_detail_view(request, candidature_id):
         else:  # en_attente
             timeline_entries.append({'date': '', 'action': 'En attente d\'examen', 'status': 'current'})
         
-        # Ajouter les étapes futures si pas encore terminé
         if candidature.status not in ['acceptee', 'refusee']:
             timeline_entries.extend([
                 {'date': '', 'action': 'Entretien téléphonique', 'status': 'pending'},
                 {'date': '', 'action': 'Entretien technique', 'status': 'pending'},
                 {'date': '', 'action': 'Décision finale', 'status': 'pending'}
             ])
-        
-        # Ajouter la timeline à l'objet candidature pour le template
+      
         candidature.timeline = timeline_entries
 
         # statistiques du candidat
@@ -433,7 +422,7 @@ def candidature_detail_view(request, candidature_id):
         return redirect('account')
 
 
-# Actions pour accepter/refuser une candidature
+# actions pour accepter/refuser une candidature
 @login_required
 def accepter_candidature(request, candidature_id):
     """
@@ -446,14 +435,11 @@ def accepter_candidature(request, candidature_id):
     try:
         candidature = Candidature.objects.get(id=candidature_id)
         
-        # Vérifier que la candidature n'est pas déjà traitée
         if candidature.status in ['acceptee', 'refusee']:
             messages.warning(request, f'Cette candidature a déjà été {candidature.get_status_display().lower()}.')
         else:
-            # Mettre à jour le statut
             candidature.status = 'acceptee'
             
-            # Ajouter un commentaire automatique
             commentaire_auto = f"Candidature acceptée par {request.user.first_name} {request.user.last_name} ({request.user.email}) le {timezone.now().strftime('%d/%m/%Y à %H:%M')}"
             if candidature.commentaires:
                 candidature.commentaires += f"\n\n--- ACCEPTATION ---\n{commentaire_auto}"
@@ -464,7 +450,7 @@ def accepter_candidature(request, candidature_id):
             
             messages.success(request, f'Candidature de {candidature.candidat.first_name} {candidature.candidat.last_name} acceptée avec succès!')
         
-        # Retourner vers le dashboard recruteur ou la page de détails selon la source
+        # retourner vers le dashboard recruteur ou la page de détails selon la source
         if request.GET.get('from') == 'detail':
             return redirect('candidature-detail', candidature_id=candidature_id)
         else:
@@ -474,12 +460,10 @@ def accepter_candidature(request, candidature_id):
         messages.error(request, 'Candidature non trouvée.')
         return redirect('recruiter-dashboard')
 
-
+# fini pour le candidat
 @login_required
 def refuser_candidature(request, candidature_id):
-    """
-    Vue pour refuser une candidature (réservée aux recruteurs/admins)
-    """
+ 
     if request.user.role not in ['recruteur', 'admin']:
         messages.error(request, 'Accès non autorisé.')
         return redirect('account')
@@ -487,14 +471,11 @@ def refuser_candidature(request, candidature_id):
     try:
         candidature = Candidature.objects.get(id=candidature_id)
         
-        # Vérifier que la candidature n'est pas déjà traitée
         if candidature.status in ['acceptee', 'refusee']:
             messages.warning(request, f'Cette candidature a déjà été {candidature.get_status_display().lower()}.')
         else:
-            # Mettre à jour le statut
             candidature.status = 'refusee'
             
-            # Ajouter un commentaire automatique
             commentaire_auto = f"Candidature refusée par {request.user.first_name} {request.user.last_name} ({request.user.email}) le {timezone.now().strftime('%d/%m/%Y à %H:%M')}"
             if candidature.commentaires:
                 candidature.commentaires += f"\n\n--- REFUS ---\n{commentaire_auto}"
@@ -505,7 +486,7 @@ def refuser_candidature(request, candidature_id):
             
             messages.success(request, f'Candidature de {candidature.candidat.first_name} {candidature.candidat.last_name} refusée.')
         
-        # Retourner vers le dashboard recruteur ou la page de détails selon la source
+        # retourner vers le dashboard recruteur 
         if request.GET.get('from') == 'detail':
             return redirect('candidature-detail', candidature_id=candidature_id)
         else:

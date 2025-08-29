@@ -3,39 +3,31 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils.html import format_html
 from .models import User, Candidature  # Seulement les modèles existants
 
+
+#admin en fonction du BaseUser
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
-    """
-    Administration personnalisée pour le modèle User étendu
-    """
     list_display = ('username', 'email', 'first_name', 'last_name', 'role', 'is_active', 'created_at')
     list_filter = ('role', 'is_active', 'created_at', 'is_staff')
     search_fields = ('username', 'email', 'first_name', 'last_name')
     ordering = ('-created_at',)
     
-    # Ajouter les champs personnalisés aux fieldsets
     fieldsets = BaseUserAdmin.fieldsets + (
         ('Informations supplémentaires', {
             'fields': ('role', 'phone', 'created_at', 'updated_at')
         }),
     )
     
-    # Champs en lecture seule
     readonly_fields = ('created_at', 'updated_at')
     
+    # overridz poue l'adapter à nos rôles
     def save_model(self, request, obj, form, change):
-        """
-        Override pour s'assurer que les groupes sont assignés
-        """
         super().save_model(request, obj, form, change)
         obj.assign_role_group()
 
-
+# admin des candidatures
 @admin.register(Candidature)
 class CandidatureAdmin(admin.ModelAdmin):
-    """
-    Administration pour les candidatures
-    """
     list_display = ('candidat_info', 'poste', 'entreprise', 'status', 'score_ia_display', 'created_at', 'has_files')
     list_filter = ('status', 'entreprise', 'created_at')
     search_fields = ('candidat__email', 'candidat__first_name', 'candidat__last_name', 'poste', 'entreprise')
@@ -88,7 +80,7 @@ class CandidatureAdmin(admin.ModelAdmin):
         return ', '.join(files) if files else 'Aucun'
     has_files.short_description = 'Documents'
 
-# Configuration du site admin
+# configuration du site admin
 admin.site.site_header = "CV Analyser - Administration"
 admin.site.site_title = "CV Analyser Admin"
 admin.site.index_title = "Bienvenue dans l'administration"

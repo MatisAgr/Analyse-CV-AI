@@ -1,6 +1,3 @@
-"""
-Script d'initialisation complète des données de test
-"""
 from django.core.management.base import BaseCommand
 from django.core.management import call_command
 
@@ -19,15 +16,15 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('INITIALISATION DES DONNÉES DE TEST'))
         self.stdout.write('='*60)
 
-        # Étape 1: Créer les utilisateurs
-        self.stdout.write('\n📋 Étape 1: Création des utilisateurs de test...')
+        # créer les utilisateurs
+        self.stdout.write('\n Étape 1: Création des utilisateurs de test...')
         call_command('create_test_users', delete_existing=options['reset'])
 
-        # Étape 2: Initialiser les groupes
-        self.stdout.write('\n👥 Étape 2: Initialisation des groupes...')
+        # initialiser les groupes
+        self.stdout.write('\n Étape 2: Initialisation des groupes...')
         call_command('init_groups')
 
-        # Résumé final
+        # résumé final
         self.stdout.write('\n' + '='*60)
         self.stdout.write(self.style.SUCCESS('INITIALISATION TERMINÉE!'))
         self.stdout.write('\nCOMPTES POSTMAN:')
@@ -37,4 +34,4 @@ class Command(BaseCommand):
         self.stdout.write('Candidat 1: jean.martin@email.com / CandidatTest123!')
         self.stdout.write('Candidat 2: sophie.bernard@email.com / CandidatTest123!')
         
-        self.stdout.write('\n🔗 API BASE URL: http://127.0.0.1:8000/api')
+        self.stdout.write('\nAPI BASE URL: http://127.0.0.1:8000/api')

@@ -5,30 +5,24 @@ from django.core.validators import FileExtensionValidator
 
 
 def upload_cv_to(instance, filename):
-    """Fonction pour définir où stocker les CV"""
     # Organiser par utilisateur: cv/user_123/cv_nom.pdf
     return f'cv/user_{instance.candidat.id}/{filename}'
 
 
 def upload_lettre_to(instance, filename):
-    """Fonction pour définir où stocker les lettres de motivation"""
     return f'lettres/user_{instance.candidat.id}/{filename}'
 
 class User(AbstractUser):
-    """
-    Modèle utilisateur étendu avec système de rôles
-    pour la gestion des ressources humaines
-    """
     ROLE_CHOICES = [
         ('admin', 'Administrateur'),
         ('recruteur', 'Recruteur'),
         ('candidat', 'Candidat'),
     ]
     
-    # Email comme identifiant unique
+    # email comme identifiant unique
     email = models.EmailField(unique=True, help_text="Adresse email (identifiant de connexion)")
     
-    # Username généré automatiquement à partir de l'email
+    # username généré automatiquement à partir de l'email
     username = models.CharField(max_length=150, unique=True, help_text="Nom d'utilisateur généré automatiquement")
     
     role = models.CharField(
@@ -50,10 +44,6 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ['username']  # username
     
     def save(self, *args, **kwargs):
-        """
-        Override de save pour assigner automatiquement 
-        les groupes selon le rôle
-        """
         is_new = self.pk is None
         super().save(*args, **kwargs)
         
@@ -61,9 +51,6 @@ class User(AbstractUser):
             self.assign_role_group()
     
     def assign_role_group(self):
-        """
-        Assigne l'utilisateur au groupe correspondant à son rôle
-        """
         # Mapping rôle -> nom du groupe
         role_group_mapping = {
             'admin': 'Administrateurs',
@@ -86,9 +73,6 @@ class User(AbstractUser):
 
 
 class Candidature(models.Model):
-    """
-    Modèle pour gérer les candidatures des utilisateurs
-    """
     STATUS_CHOICES = [
         ('en_attente', 'En attente'),
         ('en_cours', 'En cours d\'examen'),
@@ -162,8 +146,8 @@ class Candidature(models.Model):
     def __str__(self):
         return f"{self.candidat.email} - {self.poste} ({self.get_status_display()})"
     
+    # suppression des fichiers associés
     def delete(self, *args, **kwargs):
-        """Supprimer les fichiers lors de la suppression de la candidature"""
         if self.cv:
             if os.path.isfile(self.cv.path):
                 os.remove(self.cv.path)
@@ -179,9 +163,6 @@ class Candidature(models.Model):
 
 
 class AIModel(models.Model):
-    """
-    Modèle pour gérer les modèles d'IA utilisés pour l'analyse
-    """
     MODEL_TYPE_CHOICES = [
         ('transformer', 'Transformer'),
         ('bert', 'BERT'),
@@ -202,9 +183,6 @@ class AIModel(models.Model):
 
 
 class Candidate(models.Model):
-    """
-    Modèle pour les candidats (peut être utilisé indépendamment du User)
-    """
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
@@ -216,9 +194,6 @@ class Candidate(models.Model):
 
 
 class JobPosition(models.Model):
-    """
-    Modèle pour les postes à pourvoir
-    """
     title = models.CharField(max_length=200)
     description = models.TextField()
     required_skills = models.JSONField(default=list)
@@ -233,9 +208,6 @@ class JobPosition(models.Model):
 
 
 class Resume(models.Model):
-    """
-    Modèle pour les CV uploadés
-    """
     candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE, related_name='resumes')
     file = models.FileField(upload_to='resumes/')
     original_filename = models.CharField(max_length=255)
@@ -256,9 +228,6 @@ class Resume(models.Model):
 
 
 class CVAnalysis(models.Model):
-    """
-    Modèle pour les analyses de CV par IA
-    """
     resume = models.ForeignKey(Resume, on_delete=models.CASCADE, related_name='analyses')
     job_position = models.ForeignKey(JobPosition, on_delete=models.CASCADE, related_name='cv_analyses')
     overall_score = models.FloatField(default=0.0)

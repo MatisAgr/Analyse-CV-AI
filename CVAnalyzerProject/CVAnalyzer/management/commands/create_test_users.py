@@ -65,11 +65,10 @@ class Command(BaseCommand):
             # Vérifier si l'utilisateur existe déjà
             if User.objects.filter(email=email).exists():
                 self.stdout.write(
-                    self.style.WARNING(f'⚠️  Utilisateur {email} existe déjà')
+                    self.style.WARNING(f' Utilisateur {email} existe déjà')
                 )
                 continue
 
-            # Créer l'utilisateur
             password = user_data.pop('password')
             user = User.objects.create_user(**user_data)
             user.set_password(password)
@@ -77,26 +76,26 @@ class Command(BaseCommand):
             
             created_count += 1
             self.stdout.write(
-                self.style.SUCCESS(f'✅ Créé: {user.first_name} {user.last_name} ({user.role}) - {email}')
+                self.style.SUCCESS(f' Créé: {user.first_name} {user.last_name} ({user.role}) - {email}')
             )
 
         # Afficher le résumé
         self.stdout.write('\n' + '='*60)
-        self.stdout.write(self.style.SUCCESS(f'🎉 {created_count} utilisateurs créés avec succès!'))
-        self.stdout.write('\n📋 COMPTES DE TEST CRÉÉS:')
+        self.stdout.write(self.style.SUCCESS(f' {created_count} utilisateurs créés avec succès!'))
+        self.stdout.write('\n COMPTES DE TEST CRÉÉS:')
         self.stdout.write('='*60)
         
         test_accounts = [
-            ('👑 ADMIN', 'admin@cvanalyzer.com', 'AdminTest123!'),
-            ('💼 RECRUTEUR', 'marie.recruteur@cvanalyzer.com', 'RecruteurTest123!'),
-            ('👤 CANDIDAT 1', 'jean.martin@email.com', 'CandidatTest123!'),
-            ('👤 CANDIDAT 2', 'sophie.bernard@email.com', 'CandidatTest123!'),
+            ('ADMIN', 'admin@cvanalyzer.com', 'AdminTest123!'),
+            ('RECRUTEUR', 'marie.recruteur@cvanalyzer.com', 'RecruteurTest123!'),
+            ('CANDIDAT 1', 'jean.martin@email.com', 'CandidatTest123!'),
+            ('CANDIDAT 2', 'sophie.bernard@email.com', 'CandidatTest123!'),
         ]
         
         for role, email, password in test_accounts:
             self.stdout.write(f'{role}:')
-            self.stdout.write(f'  📧 Email: {email}')
-            self.stdout.write(f'  🔑 Mot de passe: {password}')
+            self.stdout.write(f'  Email: {email}')
+            self.stdout.write(f'  Mot de passe: {password}')
             self.stdout.write('')
 
-        self.stdout.write(self.style.SUCCESS('🚀 Prêt pour les tests Postman!'))
+        self.stdout.write(self.style.SUCCESS('Prêt pour les tests Postman!'))

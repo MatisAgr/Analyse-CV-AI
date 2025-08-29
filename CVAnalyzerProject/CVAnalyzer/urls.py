@@ -10,7 +10,6 @@ from rest_framework.decorators import api_view
 
 @api_view(['GET'])
 def api_status(request):
-    """Endpoint temporaire pour vérifier que l'API fonctionne"""
     return Response({
         'endpoints': [
             'POST /api/register/',

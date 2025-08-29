@@ -18,9 +18,9 @@ from ..serializers import (
 from ..models import User, Candidature
 
 
+# endpoint de vérification de l'état de l'API
 @api_view(['GET'])
 def api_status(request):
-    """Endpoint temporaire pour vérifier que l'API fonctionne"""
     return Response({
         'endpoints': [
             'POST /api/register/',
@@ -34,15 +34,14 @@ def api_status(request):
     })
 
 
+# inscription utilisateur
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def register(request):
-    """Inscription d'un nouvel utilisateur via API"""
     serializer = UserRegistrationSerializer(data=request.data)
     if serializer.is_valid():
         user = serializer.save()
         
-        # Générer les tokens JWT
         refresh = RefreshToken.for_user(user)
         
         return Response({
@@ -57,15 +56,15 @@ def register(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+#connexion
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login_user(request):
-    """Connexion utilisateur via API"""
     serializer = UserLoginSerializer(data=request.data)
     if serializer.is_valid():
         user = serializer.validated_data['user']
         
-        # Générer les tokens JWT
+        # générer les tokens JWT
         refresh = RefreshToken.for_user(user)
         
         return Response({
@@ -80,18 +79,18 @@ def login_user(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+# profil de l'utilisateur connecté
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def user_profile(request):
-    """Profil de l'utilisateur connecté via API"""
     serializer = UserProfileSerializer(request.user)
     return Response(serializer.data)
 
 
+# modification du profil
 @api_view(['PUT', 'PATCH'])
 @permission_classes([IsAuthenticated])
 def update_profile(request):
-    """Modifier son profil via API"""
     serializer = UserProfileSerializer(request.user, data=request.data, partial=True)
     if serializer.is_valid():
         serializer.save()
@@ -102,13 +101,13 @@ def update_profile(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+# liste des utilisateurs
 @api_view(['GET'])
 @permission_classes([IsRecruteurOrAdmin])
 def list_users(request):
-    """Liste des utilisateurs (recruteurs et admins seulement) via API"""
     users = User.objects.all().order_by('-created_at')
     
-    # Filtrer par rôle si demandé
+    # filtrer par rôle si demandé
     role = request.query_params.get('role')
     if role:
         users = users.filter(role=role)
@@ -120,10 +119,10 @@ def list_users(request):
     })
 
 
+# vérification des informations de l'utilisateur
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def check_user_info(request):
-    """Voir les infos de l'utilisateur connecté (pour tests) via API"""
     return Response({
         'email': request.user.email,
         'role': request.user.role,
@@ -133,20 +132,21 @@ def check_user_info(request):
     })
 
 
+# vérification si admin
 @api_view(['GET'])
 @permission_classes([IsAdmin])
 def admin_only(request):
-    """Endpoint que seuls les admins peuvent voir via API"""
     return Response({
         'message': 'Tu es admin !',
         'secret': 'Seuls les admins voient ce message'
     })
 
+
+# postuler ici
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_candidature(request):
-    """Créer une nouvelle candidature (candidats seulement)"""
-    # Vérifier que l'utilisateur est un candidat
+    # vérifier que l'utilisateur est un candidat
     if request.user.role != 'candidat':
         return Response({
             'error': 'Seuls les candidats peuvent créer des candidatures'
@@ -156,7 +156,7 @@ def create_candidature(request):
     if serializer.is_valid():
         candidature = serializer.save()
         
-        # Retourner la candidature créée avec tous les détails
+        # retourner la candidature créée
         response_serializer = CandidatureListSerializer(candidature, context={'request': request})
         return Response({
             'message': 'Candidature créée avec succès',
@@ -173,13 +173,10 @@ def list_candidatures(request):
     user = request.user
     
     if user.role == 'candidat':
-        # Les candidats voient seulement leurs candidatures
         candidatures = Candidature.objects.filter(candidat=user)
-    elif user.role in ['recruteur', 'admin']:
-        # Les recruteurs et admins voient toutes les candidatures
+    elif user.role in ['recruteur', 'admin']: # les recruteurs et admins voient toutes les candidatures
         candidatures = Candidature.objects.all()
-        
-        # Filtres optionnels
+     
         status_filter = request.query_params.get('status')
         if status_filter:
             candidatures = candidatures.filter(status=status_filter)
@@ -200,7 +197,7 @@ def list_candidatures(request):
         'candidatures': serializer.data
     })
   
-#   nouveau
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_candidature(request, candidature_id):
@@ -212,7 +209,7 @@ def get_candidature(request, candidature_id):
             'error': 'Candidature non trouvée'
         }, status=status.HTTP_404_NOT_FOUND)
     
-    # Vérification des permissions
+    # vérification des permissions
     user = request.user
     if user.role == 'candidat' and candidature.candidat != user:
         return Response({
@@ -234,7 +231,7 @@ def update_candidature(request, candidature_id):
             'error': 'Candidature non trouvée'
         }, status=status.HTTP_404_NOT_FOUND)
     
-    # Seuls les recruteurs/admins peuvent modifier le statut
+    # seuls les recruteurs/admins peuvent modifier le statut
     if request.user.role not in ['recruteur', 'admin']:
         return Response({
             'error': 'Seuls les recruteurs peuvent modifier les candidatures'
@@ -250,7 +247,6 @@ def update_candidature(request, candidature_id):
     if serializer.is_valid():
         candidature = serializer.save()
         
-        # Retourner la candidature mise à jour
         response_serializer = CandidatureListSerializer(candidature, context={'request': request})
         return Response({
             'message': 'Candidature mise à jour',
@@ -271,7 +267,7 @@ def delete_candidature(request, candidature_id):
             'error': 'Candidature non trouvée'
         }, status=status.HTTP_404_NOT_FOUND)
     
-    # Les candidats peuvent supprimer leurs candidatures, les admins toutes
+    # les candidats peuvent supprimer leurs candidatures
     if request.user.role == 'candidat' and candidature.candidat != request.user:
         return Response({
             'error': 'Vous ne pouvez supprimer que vos propres candidatures'

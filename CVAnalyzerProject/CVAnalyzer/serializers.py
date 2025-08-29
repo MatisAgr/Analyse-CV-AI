@@ -4,7 +4,6 @@ from .models import User, Candidature
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
-    """Serializer pour l'inscription des utilisateurs"""
     password = serializers.CharField(write_only=True, min_length=8)
     password_confirm = serializers.CharField(write_only=True)
 
@@ -42,7 +41,6 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
 
 class UserLoginSerializer(serializers.Serializer):
-    """Serializer pour la connexion"""
     email = serializers.EmailField()
     password = serializers.CharField()
 
@@ -81,7 +79,6 @@ class UserLoginSerializer(serializers.Serializer):
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
-    """Serializer pour le profil utilisateur"""
     groups = serializers.StringRelatedField(many=True, read_only=True)
     
     class Meta:
@@ -91,7 +88,6 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 
 class UserListSerializer(serializers.ModelSerializer):
-    """Serializer pour la liste des utilisateurs (admin/recruteur)"""
     groups = serializers.StringRelatedField(many=True, read_only=True)
     
     class Meta:
@@ -101,26 +97,22 @@ class UserListSerializer(serializers.ModelSerializer):
 
 
 class CandidatureCreateSerializer(serializers.ModelSerializer):
-    """Serializer pour créer une candidature"""
-    
     class Meta:
         model = Candidature
         fields = ('poste', 'entreprise', 'cv', 'lettre_motivation')
         
     def validate_cv(self, value):
-        """Validation du fichier CV"""
         if value.size > 5 * 1024 * 1024:  # 5MB
             raise serializers.ValidationError("Le CV ne peut pas dépasser 5MB")
         return value
     
     def validate_lettre_motivation(self, value):
-        """Validation de la lettre de motivation"""
         if value and value.size > 5 * 1024 * 1024:  # 5MB
             raise serializers.ValidationError("La lettre ne peut pas dépasser 5MB")
         return value
     
     def create(self, validated_data):
-        # Ajouter automatiquement le candidat connecté
+        # ajouter automatiquement le candidat connecté
         validated_data['candidat'] = self.context['request'].user
         return super().create(validated_data)
 

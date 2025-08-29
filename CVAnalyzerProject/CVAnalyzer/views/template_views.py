@@ -141,21 +141,32 @@ def upload_documents(request):
             
             extracted_text = extraction_result['text']
             
-            # Analyse IA du CV
+            # Analyse IA du CV avec optimisations GPU
             analyzer = CVAnalyzer()
             
-            # Analyse des compétences
-            skills_analysis = analyzer.extract_skills(extracted_text)
+            # Affichage des informations GPU
+            gpu_info = analyzer.get_gpu_info()
+            print(f"🔧 Configuration GPU: {gpu_info}")
             
-            # Analyse de l'expérience
-            experience_analysis = analyzer.extract_experience(extracted_text)
-            
-            # Calcul du score global
-            overall_score = analyzer.calculate_overall_score({
-                'skills': skills_analysis,
-                'experience': experience_analysis,
-                'text_length': len(extracted_text)
-            })
+            try:
+                # Analyse des compétences
+                skills_analysis = analyzer.extract_skills(extracted_text)
+                
+                # Analyse de l'expérience
+                experience_analysis = analyzer.extract_experience(extracted_text)
+                
+                # Calcul du score global
+                overall_score = analyzer.calculate_overall_score({
+                    'skills': skills_analysis,
+                    'experience': experience_analysis,
+                    'text_length': len(extracted_text)
+                })
+                
+                print(f"✅ Analyse terminée - Score: {overall_score}% (GPU: {gpu_info.get('gpu_available', False)})")
+                
+            finally:
+                # Nettoyage de la mémoire GPU après traitement
+                analyzer.cleanup_gpu_memory()
             
             # Création de la candidature en base de données
             candidature = Candidature.objects.create(
@@ -165,8 +176,8 @@ def upload_documents(request):
                 cv=cv_file,
                 status='en_attente',
                 score_ia=overall_score,
-                competences_extraites=skills_analysis.get('skills', []),
-                commentaires=f'CV analysé automatiquement. Score: {overall_score}%'
+                competences_extraites=skills_analysis,  # Correction: utiliser directement skills_analysis
+                commentaires=f'CV analysé automatiquement. Score: {overall_score}% - GPU: {gpu_info.get("gpu_available", False)}'
             )
             
             # Nettoyage du fichier temporaire

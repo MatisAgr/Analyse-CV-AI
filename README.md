@@ -1,6 +1,12 @@
-﻿# 🤖 Analyse CV IA
+<div align="center">
+    
+# Analyse CV IA
 
 Système d'analyse intelligente de CV avec modèles BERT et Transformers pour l'automatisation du processus de recrutement.
+
+</div>
+
+---
 
 ## 📋 Sommaire
 
@@ -39,15 +45,23 @@ Ce projet a été développé dans le cadre d'un cours d'analyse de CV par IA, p
 ##  Screenshots
 
 ### Page d'accueil - Dépôt de CV
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/e99f20ba-4d60-4b68-93e0-bdbd0caf0e1e" />
+
 *Interface de dépôt de CV avec drag & drop*
 
 ### Inscription Candidat
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/d49233fe-7649-4715-b8cc-c167f0ec75b7" />
+
 *Formulaire d'inscription pour les candidats*
 
 ### Dashboard Recruteur
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/8e661cf6-4054-4213-a661-9f2ae96b7b74" />
+
 *Tableau de bord avec liste des candidatures et scores IA*
 
 ### Analyse détaillée
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/66063f12-da1b-4e92-996b-16810d651527" />
+
 *Résultats détaillés de l'analyse IA d'un CV*
 
 ---

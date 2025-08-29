@@ -1,9 +1,14 @@
 from django.urls import path
-from .views import api_views  # Import des vues API
-from .views import template_views  # Import des vues templates
+
+app_name = 'CVAnalyser'
+
+from .views import api_views        # Import des vues API
+from .views import template_views   # Import des vues templates
+from .views import security_views   # Import des vues sécurité
+from .views import ai_views         # Import des vues IA
+
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from .views import security_views
 
 @api_view(['GET'])
 def api_status(request):
@@ -79,4 +84,27 @@ urlpatterns = [
     # Fonctionnalités
     path('upload/', template_views.upload_documents, name='upload-documents'),
     path('auth-status/', template_views.check_auth_status, name='auth-status'),
+    
+    # ================================================================================================
+    # IA VIEWS
+    
+    path('', ai_views.index, name='index'),
+    
+    # Documentation API
+    path('api/', ai_views.api_index, name='api_index'),
+
+    path('api/upload-cv/', ai_views.upload_cv, name='upload_cv'),
+    path('api/analyze-cv-job/', ai_views.analyze_cv_for_job, name='analyze_cv_for_job'),
+    path('api/resume/<int:resume_id>/', ai_views.get_resume_details, name='resume_details'),
+    path('api/resumes/', ai_views.list_resumes, name='list_resumes'),
+    
+    path('api/download-dataset/', ai_views.download_dataset, name='download_dataset'),
+    
+    path('api/ai-status/', ai_views.ai_status, name='ai_status'),
+    
+    # AI Training API
+    path('api/train-model/', ai_views.train_ai_model, name='train_model'),
+    path('api/predict-category/', ai_views.predict_cv_category, name='predict_category'),
+    path('api/score-cv-job/', ai_views.score_cv_job_match, name='score_cv_job'),
+    path('api/model-metrics/', ai_views.get_model_metrics, name='model_metrics'),
 ]

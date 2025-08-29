@@ -1,4 +1,16 @@
 Django
+torch
+transformers
+sentence-transformers
+scikit-learn
+pandas
+numpy
+nltk
+PyPDF2
+python-docx
+kagglehub
+pillow
+requests
 djangorestframework
 djangorestframework-simplejwt
 django-cors-headers

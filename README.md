@@ -41,6 +41,9 @@ Ce projet a été développé dans le cadre d'un cours d'analyse de CV par IA, p
 ### Page d'accueil - Dépôt de CV
 *Interface de dépôt de CV avec drag & drop*
 
+### Inscription Candidat
+*Formulaire d'inscription pour les candidats*
+
 ### Dashboard Recruteur
 *Tableau de bord avec liste des candidatures et scores IA*
 
@@ -153,8 +156,8 @@ graph TB
 | **Backend** | Django 5.2.5, Django REST Framework |
 | **IA/ML** | PyTorch, Transformers (Hugging Face), BERT |
 | **NLP** | NLTK, Sentence Transformers |
-| **Base de données** | SQLite (dev), PostgreSQL (prod) |
-| **Frontend** | HTML5, CSS3, JavaScript, Bootstrap |
+| **Base de données** | SQLite (dev), PostgreSQL (prod pour le futur) |
+| **Frontend** | HTML5, CSS3, JavaScript, Tailwind CSS |
 | **Traitement fichiers** | PyPDF2, python-docx |
 
 ### Flux d'analyse IA
@@ -241,11 +244,12 @@ class User(AbstractUser):
         ('recruteur', 'Recruteur'),
         ('candidat', 'Candidat'),
     ]
-    
-    email = models.EmailField(unique=True)  # Identifiant principal
+    username = models.CharField(max_length=150, unique=True)
+    email = models.EmailField(unique=True)  # Identifiant de connexion
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
-    phone = models.CharField(max_length=15, blank=True)
+    phone = models.CharField(max_length=15, blank=True)  # Non utilisé
     created_at = models.DateTimeField(auto_now_add=True)
+    # first_name et last_name sont hérités de AbstractUser
 ```
 
 ### Candidature
@@ -372,17 +376,15 @@ flowchart TD
 ```
 templates/
 ├── core/
-│   ├── base.html           # Template de base
-│   └── navbar.html         # Navigation principale
+│   ├── base.html                 # Template de base avec balisage commun et body dynamique
 ├── components/
-│   ├── messages.html       # Système de messages
-│   ├── forms/             # Composants de formulaires
-│   └── cards/             # Cartes d'affichage
+│   ├── navbar.html               # Navigation principale
+│   └── footer.html               # Pied de page
 └── pages/
-    ├── home.html          # Page d'accueil
-    ├── login.html         # Connexion
-    ├── register.html      # Inscription
-    ├── account.html       # Compte utilisateur
+    ├── home.html                 # Page d'accueil
+    ├── login.html                # Connexion
+    ├── register.html             # Inscription
+    ├── account.html              # Compte utilisateur
     ├── recruiter_dashboard.html  # Tableau de bord recruteur
     └── candidature_detail.html   # Détail candidature
 ```
@@ -391,10 +393,10 @@ templates/
 
 - **Design responsive** : Compatible mobile/desktop
 - **Navigation intuitive** : Différentielle selon le rôle
-- **Upload drag & drop** : Interface moderne pour fichiers
+- **Upload drag & drop** : Interface moderne pour multi-fichiers
 - **Notifications temps réel** : Système de messages Django
-- **Tableaux interactifs** : Tri, filtrage, pagination
-- **Visualisations** : Graphiques des scores d'analyse
+- **Tableaux interactifs** : Tri, filtrage, pagination *(pas encore implémenté)*
+- **Visualisations** : Score, moyennes et nombre de candidatures
 
 ---
 

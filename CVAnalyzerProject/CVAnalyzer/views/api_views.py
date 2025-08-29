@@ -10,18 +10,18 @@ from ..serializers import (
     UserRegistrationSerializer, 
     UserLoginSerializer, 
     UserProfileSerializer,
-    UserListSerializer
+    UserListSerializer,
+    CandidatureCreateSerializer,
+    CandidatureListSerializer,
+    CandidatureUpdateSerializer
 )
-from ..models import User
+from ..models import User, Candidature
 
 
 @api_view(['GET'])
 def api_status(request):
     """Endpoint temporaire pour vérifier que l'API fonctionne"""
     return Response({
-        'status': 'API CVAnalyzer - Étape 3 terminée',
-        'version': '3.0.0',
-        'message': 'Endpoints API DRF prêts',
         'endpoints': [
             'POST /api/register/',
             'POST /api/login/',

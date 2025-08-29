@@ -12,30 +12,28 @@ from .ai_services.cv_analyzer import CVAnalyzer
 from .ai_services.text_extractor import TextExtractor
 from .ai_services.dataset_manager import DatasetManager
 
-# Initialiser l'analyseur IA globalement
 cv_analyzer = CVAnalyzer()
 
 def index(request):
     return render(request, 'CVAnalyser/test.html')
 
 def api_index(request):
-    """Documentation de l'API REST"""
     api_endpoints = {
-        "message": "🤖 API d'Analyse CV avec IA - Documentation",
+        "message": "API d'Analyse CV avec IA - Documentation",
         "version": "1.0.0",
-        "status": "✅ Opérationnelle",
+        "status": "Operationnelle",
         "endpoints": {
-            "🏠 Accueil": {
+            "Accueil": {
                 "url": "/",
                 "method": "GET",
                 "description": "Interface web principale"
             },
-            "🤖 Statut IA": {
+            "Statut IA": {
                 "url": "/api/ai-status/",
                 "method": "GET", 
-                "description": "Vérifier le statut des modèles IA"
+                "description": "Verifier le statut des modeles IA"
             },
-            "📤 Upload CV": {
+            "Upload CV": {
                 "url": "/api/upload-cv/",
                 "method": "POST",
                 "description": "Uploader et analyser un CV",
@@ -45,29 +43,29 @@ def api_index(request):
                     "email": "Email du candidat (optionnel)"
                 }
             },
-            "🎯 Analyse CV/Poste": {
+            "Analyse CV/Poste": {
                 "url": "/api/analyze-cv-job/",
                 "method": "POST",
                 "description": "Calculer la correspondance CV/poste",
                 "params": {
-                    "resume_id": "ID du CV analysé",
+                    "resume_id": "ID du CV analyse",
                     "job_description": "Description du poste"
                 }
             },
-            "📋 Liste CV": {
+            "Liste CV": {
                 "url": "/api/resumes/",
                 "method": "GET",
-                "description": "Lister tous les CV analysés"
+                "description": "Lister tous les CV analyses"
             },
-            "📄 Détails CV": {
+            "Details CV": {
                 "url": "/api/resume/{resume_id}/",
                 "method": "GET",
-                "description": "Obtenir les détails d'un CV spécifique"
+                "description": "Obtenir les details d'un CV specifique"
             },
-            "📊 Télécharger Dataset": {
+            "Telecharger Dataset": {
                 "url": "/api/download-dataset/",
                 "method": "GET",
-                "description": "Télécharger des datasets de CV depuis Kaggle"
+                "description": "Telecharger des datasets de CV depuis Kaggle"
             }
         },
         "formats_supportes": ["PDF", "DOCX", "TXT"],
@@ -93,7 +91,6 @@ def upload_cv(request):
         
         cv_file = request.FILES['cv_file']
         
-        # Vérifier que les settings existent
         try:
             allowed_extensions = settings.ALLOWED_CV_EXTENSIONS
             max_size = settings.CV_UPLOAD_MAX_SIZE
@@ -115,13 +112,12 @@ def upload_cv(request):
         candidate_email = request.POST.get('email', '')
         candidate_name = request.POST.get('name', 'Candidat Anonyme')
         
-        # Créer ou récupérer le candidat
         try:
             if candidate_email:
                 candidate, created = Candidate.objects.get_or_create(
                     email=candidate_email,
                     defaults={
-                        'first_name': candidate_name.split()[0] if candidate_name.split() else 'Prénom',
+                        'first_name': candidate_name.split()[0] if candidate_name.split() else 'Prenom',
                         'last_name': ' '.join(candidate_name.split()[1:]) if len(candidate_name.split()) > 1 else 'Nom'
                     }
                 )
@@ -132,16 +128,14 @@ def upload_cv(request):
                     last_name=' '.join(candidate_name.split()[1:]) if len(candidate_name.split()) > 1 else 'Nom'
                 )
         except Exception as e:
-            return JsonResponse({'error': f'Erreur création candidat: {e}'}, status=500)
+            return JsonResponse({'error': f'Erreur creation candidat: {e}'}, status=500)
         
-        # Sauvegarder le fichier
         try:
             file_path = default_storage.save(f'resumes/{cv_file.name}', cv_file)
             full_file_path = os.path.join(settings.MEDIA_ROOT, file_path)
         except Exception as e:
             return JsonResponse({'error': f'Erreur sauvegarde fichier: {e}'}, status=500)
         
-        # Créer l'enregistrement Resume
         try:
             resume = Resume.objects.create(
                 candidate=candidate,
@@ -151,9 +145,8 @@ def upload_cv(request):
                 file_type=file_extension
             )
         except Exception as e:
-            return JsonResponse({'error': f'Erreur création resume: {e}'}, status=500)
+            return JsonResponse({'error': f'Erreur creation resume: {e}'}, status=500)
         
-        # Extraction du texte
         try:
             extraction_result = TextExtractor.extract_and_clean(full_file_path)
             
@@ -171,7 +164,6 @@ def upload_cv(request):
             resume.save()
             return JsonResponse({'error': f'Erreur extraction texte: {e}'}, status=500)
         
-        # Analyse IA
         try:
             analysis_result = cv_analyzer.extract_text_from_cv(extraction_result['cleaned_text'])
             
@@ -321,7 +313,6 @@ def list_resumes(request):
 
 def ai_status(request):
     try:
-        # tester l'analyseur
         test_text = "Test engineer with Python experience"
         result = cv_analyzer.extract_skills(test_text)
         

@@ -1,4 +1,4 @@
-# TISMA IMPORT
+# fichier pour la backup
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
@@ -203,8 +203,8 @@ def list_candidatures(request):
         'count': candidatures.count(),
         'candidatures': serializer.data
     })
-
-
+  
+#   nouveau
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_candidature(request, candidature_id):

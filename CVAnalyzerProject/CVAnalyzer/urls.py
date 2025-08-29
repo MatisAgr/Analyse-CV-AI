@@ -6,12 +6,9 @@ from rest_framework.decorators import api_view
 from . import security_views
 
 @api_view(['GET'])
-# petit check up pour voir si l'api marche
 def api_status(request):
+    """Endpoint temporaire pour vérifier que l'API fonctionne"""
     return Response({
-        'status': 'API CVAnalyzer',
-        'version': '3.0.0',
-        'message': 'Endpoints API DRF prêts',
         'endpoints': [
             'POST /api/register/',
             'POST /api/login/',
@@ -31,10 +28,11 @@ def api_status(request):
     })
 
 urlpatterns = [
+    # ================================================================================================
     # API ENDPOINTS (REST)    
 
     # Status API
-    path('status/', api_views.api_status, name='api-status'),
+    path('api/status/', api_status, name='api-status'),
     
     # Authentification API
     path('api/register/', api_views.register, name='api-register'),
@@ -50,29 +48,24 @@ urlpatterns = [
     # Tests API
     path('api/check/', api_views.check_user_info, name='check-user'),
     path('api/admin-only/', api_views.admin_only, name='admin-only'),
-  
-    # Tests
-    path('check/', views.check_user_info, name='check-user'),
-    path('admin-only/', views.admin_only, name='admin-only'),
     
-    # Candidatures
-    path('candidatures/', views.list_candidatures, name='list-candidatures'),
-    path('candidatures/create/', views.create_candidature, name='create-candidature'),
-    path('candidatures/<int:candidature_id>/', views.get_candidature, name='get-candidature'),
-    path('candidatures/<int:candidature_id>/update/', views.update_candidature, name='update-candidature'),
-    path('candidatures/<int:candidature_id>/delete/', views.delete_candidature, name='delete-candidature'),
+    # Candidatures API
+    path('api/candidatures/', api_views.list_candidatures, name='list-candidatures'),
+    path('api/candidatures/create/', api_views.create_candidature, name='create-candidature'),
+    path('api/candidatures/<int:candidature_id>/', api_views.get_candidature, name='get-candidature'),
+    path('api/candidatures/<int:candidature_id>/update/', api_views.update_candidature, name='update-candidature'),
+    path('api/candidatures/<int:candidature_id>/delete/', api_views.delete_candidature, name='delete-candidature'),
     
-    # Sécurité 
-    path('security/status/', security_views.security_status, name='security-status'),
-    path('security/csrf-token/', security_views.get_csrf_token, name='csrf-token'),
-    path('security/test-xss/', security_views.test_xss_protection, name='test-xss'),
-    path('security/user-info/', security_views.user_security_info, name='user-security'),
-  
+    # Sécurité API
+    path('api/security/status/', security_views.security_status, name='security-status'),
+    path('api/security/csrf-token/', security_views.get_csrf_token, name='csrf-token'),
+    path('api/security/test-xss/', security_views.test_xss_protection, name='test-xss'),
+    path('api/security/user-info/', security_views.user_security_info, name='user-security'),
     
     # ================================================================================================
     # TEMPLATE VIEWS (HTML Pages)
     
-    # pages principales
+    # Pages principales
     path('', template_views.home, name='home'),
     path('login/', template_views.login_view, name='login'),
     path('register/', template_views.register_view, name='register'),
@@ -81,5 +74,4 @@ urlpatterns = [
     # Fonctionnalités
     path('upload/', template_views.upload_documents, name='upload-documents'),
     path('auth-status/', template_views.check_auth_status, name='auth-status'),
-
 ]

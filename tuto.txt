@@ -1,0 +1,21 @@
+python -m venv .venv
+
+.venv\Scripts\activate
+
+pip install django
+
+-------
+
+django-admin startproject CVAnalyzerProject
+
+cd CVAnalyzerProject
+
+python manage.py startapp CVAnalyzer
+
+python manage.py createsuperuser
+
+python manage.py runserver
+
+python manage.py makemigrations
+
+python manage.py migrate

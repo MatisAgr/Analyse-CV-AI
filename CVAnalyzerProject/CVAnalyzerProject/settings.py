@@ -156,3 +156,32 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True
+
+# Sécurité:
+
+
+# Protection CSRF
+CSRF_COOKIE_SECURE = False
+CSRF_COOKIE_HTTPONLY = True
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
+# Protection XSS
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+
+# Protection Clickjacking
+X_FRAME_OPTIONS = 'DENY'
+
+# Sessions sécurisées
+SESSION_COOKIE_SECURE = False  # True en production avec HTTPS
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_AGE = 3600  # 1 heure
+
+
+# Headers de sécurité additionnels
+SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
+
+

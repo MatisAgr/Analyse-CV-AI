@@ -1,4 +1,4 @@
-# TISMA IMPORT
+# fichier pour la backup
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
@@ -134,6 +134,7 @@ def admin_only(request):
   
   
 # -----------------------------------------------------------------------------------------
+# page home
 def home(request):
     context = {
         # titre de la page

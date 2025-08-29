@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views
+from . import views, ai_views
 
 app_name = 'CVAnalyser'
 
@@ -17,4 +17,10 @@ urlpatterns = [
     path('api/download-dataset/', views.download_dataset, name='download_dataset'),
     
     path('api/ai-status/', views.ai_status, name='ai_status'),
+    
+    # AI Training API
+    path('api/train-model/', ai_views.train_ai_model, name='train_model'),
+    path('api/predict-category/', ai_views.predict_cv_category, name='predict_category'),
+    path('api/score-cv-job/', ai_views.score_cv_job_match, name='score_cv_job'),
+    path('api/model-metrics/', ai_views.get_model_metrics, name='model_metrics'),
 ]

@@ -204,6 +204,7 @@ def upload_cv(request):
             'details': str(e)
         }, status=500)
 
+@csrf_exempt
 @require_http_methods(["POST"])
 def analyze_cv_for_job(request):
     try:

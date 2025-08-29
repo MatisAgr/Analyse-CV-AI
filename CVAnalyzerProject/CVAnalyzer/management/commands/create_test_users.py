@@ -1,6 +1,4 @@
-"""
-Commande Django pour créer des utilisateurs de test avec des mots de passe corrects
-"""
+# IA
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import Group
 from CVAnalyzer.models import User
@@ -19,9 +17,8 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         # Supprimer les utilisateurs existants si demandé
         if options['delete_existing']:
-            self.stdout.write('🗑️  Suppression des utilisateurs de test existants...')
+            self.stdout.write('Suppression des utilisateurs de test existants...')
             User.objects.filter(email__in=[
-                'admin@cvanalyzer.com',
                 'marie.recruteur@cvanalyzer.com', 
                 'jean.martin@email.com',
                 'sophie.bernard@email.com'
@@ -30,42 +27,32 @@ class Command(BaseCommand):
         # Créer les utilisateurs de test
         users_data = [
             {
-                'email': 'admin@cvanalyzer.com',
-                'username': 'admin_user',
-                'first_name': 'Admin',
-                'last_name': 'Système',
-                'role': 'admin',
-                'password': 'AdminTest123!',
-                'is_staff': True,
-                'is_superuser': True
-            },
-            {
-                'email': 'marie.recruteur@cvanalyzer.com',
+                'email': 'testrecruteur@test.test',
                 'username': 'recruteur_marie',
                 'first_name': 'Marie',
                 'last_name': 'Dubois',
                 'role': 'recruteur',
-                'password': 'RecruteurTest123!',
+                'password': 'test',
                 'is_staff': False,
                 'is_superuser': False
             },
             {
-                'email': 'jean.martin@email.com',
+                'email': 'testcandidat@test.test',
                 'username': 'candidat_jean',
                 'first_name': 'Jean',
                 'last_name': 'Martin',
                 'role': 'candidat',
-                'password': 'CandidatTest123!',
+                'password': 'test',
                 'is_staff': False,
                 'is_superuser': False
             },
             {
-                'email': 'sophie.bernard@email.com',
+                'email': 'testcandidat2@test.test',
                 'username': 'candidat_sophie',
                 'first_name': 'Sophie',
                 'last_name': 'Bernard',
                 'role': 'candidat',
-                'password': 'CandidatTest123!',
+                'password': 'test',
                 'is_staff': False,
                 'is_superuser': False
             }

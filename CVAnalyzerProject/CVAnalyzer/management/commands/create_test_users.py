@@ -33,7 +33,7 @@ class Command(BaseCommand):
                 'last_name': 'Dubois',
                 'role': 'recruteur',
                 'password': 'test',
-                'is_staff': False,
+                'is_staff': True,
                 'is_superuser': False
             },
             {

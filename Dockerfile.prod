@@ -1,0 +1,63 @@
+# Dockerfile pour production
+FROM python:3.11-slim as base
+
+# Variables d'environnement
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Installation des dépendances système
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    libpq-dev \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Stage de construction
+FROM base as builder
+
+WORKDIR /app
+
+# Installation des dépendances Python
+COPY requirements.txt .
+RUN pip install --user --no-cache-dir -r requirements.txt
+
+# Stage de production
+FROM base as production
+
+# Création utilisateur non-root
+RUN groupadd -r django && useradd -r -g django django
+
+# Installation des dépendances de runtime
+RUN apt-get update && apt-get install -y \
+    libpq5 \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copie des dépendances depuis builder
+COPY --from=builder /root/.local /home/django/.local
+
+# Copie du code
+COPY --chown=django:django . .
+
+# Configuration des permissions
+RUN mkdir -p /app/media /app/staticfiles && \
+    chown -R django:django /app
+
+# Variables d'environnement
+ENV PATH=/home/django/.local/bin:$PATH
+
+# Utilisateur non-root
+USER django
+
+# Port d'exposition
+EXPOSE 8000
+
+# Point d'entrée
+ENTRYPOINT ["./docker/docker-entrypoint-prod.sh"]
+
+# Commande par défaut
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "4", "--worker-class", "gevent", "--worker-connections", "1000", "--timeout", "300", "--keep-alive", "2", "--max-requests", "1000", "--max-requests-jitter", "100", "CVAnalyzerProject.wsgi:application"]

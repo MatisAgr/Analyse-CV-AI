@@ -1,7 +1,5 @@
 from django.urls import path
 
-app_name = 'CVAnalyzer'
-
 from .views import api_views        # Import des vues API
 from .views import template_views   # Import des vues templates
 from .views import security_views   # Import des vues sécurité
@@ -87,9 +85,6 @@ urlpatterns = [
     
     # ================================================================================================
     # IA VIEWS - Temporairement désactivées à cause des dépendances manquantes
-    
-    # Redirection vers home pour la racine
-    path('', template_views.home, name='index'),
     
     # Documentation API (temporairement désactivée)
     # path('api/', ai_views.api_index, name='api_index'),

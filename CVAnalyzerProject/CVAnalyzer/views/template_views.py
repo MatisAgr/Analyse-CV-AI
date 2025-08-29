@@ -107,3 +107,178 @@ def check_auth_status(request):
         'authenticated': request.user.is_authenticated,
         'display_name': display_name
     })
+
+
+# page compte utilisateur
+@login_required
+def account_view(request):
+    # Données fictives pour les candidatures
+    candidatures_fictives = [
+        {
+            'id': 1,
+            'poste': 'Développeur Full Stack',
+            'entreprise': 'TechCorp',
+            'date_candidature': '2025-08-25',
+            'statut': 'en_attente',
+            'statut_display': 'En attente',
+            'statut_color': 'yellow',
+            'score_ia': 85,
+            'cv_nom': 'CV_John_Doe.pdf',
+            'lettre_nom': 'Lettre_motivation.pdf',
+            'commentaires': 'Profil intéressant, compétences techniques solides.'
+        },
+        {
+            'id': 2,
+            'poste': 'Chef de Projet Digital',
+            'entreprise': 'InnovCorp',
+            'date_candidature': '2025-08-20',
+            'statut': 'accepte',
+            'statut_display': 'Accepté',
+            'statut_color': 'green',
+            'score_ia': 92,
+            'cv_nom': 'CV_John_Doe_v2.pdf',
+            'lettre_nom': 'Lettre_chef_projet.pdf',
+            'commentaires': 'Excellent profil ! Expérience parfaitement adaptée au poste.'
+        },
+        {
+            'id': 3,
+            'poste': 'Développeur Frontend',
+            'entreprise': 'StartupXYZ',
+            'date_candidature': '2025-08-15',
+            'statut': 'rejete',
+            'statut_display': 'Rejeté',
+            'statut_color': 'red',
+            'score_ia': 68,
+            'cv_nom': 'CV_John_Doe_old.pdf',
+            'lettre_nom': None,
+            'commentaires': 'Manque d\'expérience en React. Candidature ne correspond pas aux exigences.'
+        }
+    ]
+    
+    # Calculer les statistiques
+    total_candidatures = len(candidatures_fictives)
+    candidatures_en_attente = len([c for c in candidatures_fictives if c['statut'] == 'en_attente'])
+    candidatures_acceptees = len([c for c in candidatures_fictives if c['statut'] == 'accepte'])
+    score_moyen = sum(c['score_ia'] for c in candidatures_fictives) // len(candidatures_fictives) if candidatures_fictives else 0
+    
+    context = {
+        'title': 'Mon Compte - Suivi des candidatures',
+        'candidatures': candidatures_fictives,
+        'user': request.user,
+        'stats': {
+            'total': total_candidatures,
+            'en_attente': candidatures_en_attente,
+            'acceptees': candidatures_acceptees,
+            'score_moyen': score_moyen
+        }
+    }
+    return render(request, 'pages/account.html', context)
+
+
+# page détails d'une candidature
+@login_required
+def candidature_detail_view(request, candidature_id):
+    # Données fictives pour les candidatures (même structure que account_view)
+    candidatures_fictives = [
+        {
+            'id': 1,
+            'poste': 'Développeur Full Stack',
+            'entreprise': 'TechCorp',
+            'date_candidature': '2025-08-25',
+            'statut': 'en_attente',
+            'statut_display': 'En attente',
+            'statut_color': 'yellow',
+            'score_ia': 85,
+            'cv_nom': 'CV_John_Doe.pdf',
+            'lettre_nom': 'Lettre_motivation.pdf',
+            'commentaires': 'Profil intéressant, compétences techniques solides.',
+            'competences_extraites': ['Python', 'Django', 'React', 'PostgreSQL', 'Docker'],
+            'points_forts': [
+                'Expérience solide en développement web',
+                'Maîtrise des frameworks modernes',
+                'Bonne connaissance des bases de données'
+            ],
+            'points_amelioration': [
+                'Manque d\'expérience en DevOps',
+                'Pourrait approfondir les tests unitaires'
+            ],
+            'timeline': [
+                {'date': '2025-08-25', 'action': 'Candidature soumise', 'status': 'completed'},
+                {'date': '2025-08-26', 'action': 'CV analysé par IA', 'status': 'completed'},
+                {'date': '2025-08-27', 'action': 'En cours de révision RH', 'status': 'current'},
+                {'date': '', 'action': 'Entretien téléphonique', 'status': 'pending'},
+                {'date': '', 'action': 'Entretien technique', 'status': 'pending'},
+                {'date': '', 'action': 'Décision finale', 'status': 'pending'}
+            ]
+        },
+        {
+            'id': 2,
+            'poste': 'Chef de Projet Digital',
+            'entreprise': 'InnovCorp',
+            'date_candidature': '2025-08-20',
+            'statut': 'accepte',
+            'statut_display': 'Accepté',
+            'statut_color': 'green',
+            'score_ia': 92,
+            'cv_nom': 'CV_John_Doe_v2.pdf',
+            'lettre_nom': 'Lettre_chef_projet.pdf',
+            'commentaires': 'Excellent profil ! Expérience parfaitement adaptée au poste.',
+            'competences_extraites': ['Gestion de projet', 'Scrum', 'Leadership', 'Digital', 'Analytics'],
+            'points_forts': [
+                'Leadership naturel et expérience managériale',
+                'Excellente connaissance des méthodologies agiles',
+                'Vision stratégique du digital'
+            ],
+            'points_amelioration': [],
+            'timeline': [
+                {'date': '2025-08-20', 'action': 'Candidature soumise', 'status': 'completed'},
+                {'date': '2025-08-21', 'action': 'CV analysé par IA', 'status': 'completed'},
+                {'date': '2025-08-22', 'action': 'Pré-sélectionné par RH', 'status': 'completed'},
+                {'date': '2025-08-24', 'action': 'Entretien téléphonique réussi', 'status': 'completed'},
+                {'date': '2025-08-26', 'action': 'Entretien final réussi', 'status': 'completed'},
+                {'date': '2025-08-28', 'action': 'Candidature acceptée !', 'status': 'completed'}
+            ]
+        },
+        {
+            'id': 3,
+            'poste': 'Développeur Frontend',
+            'entreprise': 'StartupXYZ',
+            'date_candidature': '2025-08-15',
+            'statut': 'rejete',
+            'statut_display': 'Rejeté',
+            'statut_color': 'red',
+            'score_ia': 68,
+            'cv_nom': 'CV_John_Doe_old.pdf',
+            'lettre_nom': None,
+            'commentaires': 'Manque d\'expérience en React. Candidature ne correspond pas aux exigences.',
+            'competences_extraites': ['HTML', 'CSS', 'JavaScript', 'Vue.js'],
+            'points_forts': [
+                'Bases solides en HTML/CSS',
+                'Créativité dans le design'
+            ],
+            'points_amelioration': [
+                'Manque d\'expérience avec React',
+                'Portfolio insuffisant',
+                'Pas de lettre de motivation'
+            ],
+            'timeline': [
+                {'date': '2025-08-15', 'action': 'Candidature soumise', 'status': 'completed'},
+                {'date': '2025-08-16', 'action': 'CV analysé par IA', 'status': 'completed'},
+                {'date': '2025-08-17', 'action': 'Rejeté par RH', 'status': 'completed'}
+            ]
+        }
+    ]
+    
+    # Trouver la candidature par ID
+    candidature = next((c for c in candidatures_fictives if c['id'] == candidature_id), None)
+    
+    if not candidature:
+        messages.error(request, 'Candidature non trouvée.')
+        return redirect('account')
+    
+    context = {
+        'title': f'Candidature - {candidature["poste"]}',
+        'candidature': candidature,
+        'user': request.user
+    }
+    return render(request, 'pages/candidature_detail.html', context)

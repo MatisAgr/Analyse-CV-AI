@@ -70,6 +70,8 @@ urlpatterns = [
     path('login/', template_views.login_view, name='login'),
     path('register/', template_views.register_view, name='register'),
     path('logout/', template_views.logout_view, name='logout'),
+    path('account/', template_views.account_view, name='account'),
+    path('account/<int:candidature_id>/', template_views.candidature_detail_view, name='candidature-detail'),
     
     # Fonctionnalités
     path('upload/', template_views.upload_documents, name='upload-documents'),

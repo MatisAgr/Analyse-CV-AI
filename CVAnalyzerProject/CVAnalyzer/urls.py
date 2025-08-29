@@ -5,9 +5,12 @@ from . import views
 from . import security_views
 
 @api_view(['GET'])
+# petit check up pour voir si l'api marche
 def api_status(request):
-    """Endpoint temporaire pour vérifier que l'API fonctionne"""
     return Response({
+        'status': 'API CVAnalyzer',
+        'version': '3.0.0',
+        'message': 'Endpoints API DRF prêts',
         'endpoints': [
             'POST /api/register/',
             'POST /api/login/',
@@ -30,9 +33,9 @@ urlpatterns = [
     # Status
     path('status/', api_status, name='api-status'),
     
-    # Authentification
-    path('register/', views.register, name='register'),
-    path('login/', views.login_user, name='login'),
+    # Authentification API
+    path('api/register/', views.register, name='api-register'),
+    path('api/login/', views.login_user, name='api-login'),
     
     # Profil utilisateur
     path('users/me/', views.user_profile, name='user-profile'),

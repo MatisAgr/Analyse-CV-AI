@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import User
+from django.utils.html import format_html
+from .models import User, Candidature  # Seulement les modèles existants
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
@@ -28,6 +29,64 @@ class UserAdmin(BaseUserAdmin):
         """
         super().save_model(request, obj, form, change)
         obj.assign_role_group()
+
+
+@admin.register(Candidature)
+class CandidatureAdmin(admin.ModelAdmin):
+    """
+    Administration pour les candidatures
+    """
+    list_display = ('candidat_info', 'poste', 'entreprise', 'status', 'score_ia_display', 'created_at', 'has_files')
+    list_filter = ('status', 'entreprise', 'created_at')
+    search_fields = ('candidat__email', 'candidat__first_name', 'candidat__last_name', 'poste', 'entreprise')
+    ordering = ('-created_at',)
+    readonly_fields = ('created_at', 'updated_at')
+    
+    fieldsets = (
+        ('Informations candidat', {
+            'fields': ('candidat',)
+        }),
+        ('Informations poste', {
+            'fields': ('poste', 'entreprise')
+        }),
+        ('Documents', {
+            'fields': ('cv', 'lettre_motivation')
+        }),
+        ('Suivi', {
+            'fields': ('status', 'commentaires')
+        }),
+        ('Analyse IA', {
+            'fields': ('score_ia', 'competences_extraites'),
+            'classes': ('collapse',)
+        }),
+        ('Métadonnées', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        })
+    )
+    
+    def candidat_info(self, obj):
+        return f"{obj.candidat.first_name} {obj.candidat.last_name} ({obj.candidat.email})"
+    candidat_info.short_description = 'Candidat'
+    
+    def score_ia_display(self, obj):
+        if obj.score_ia is not None:
+            try:
+                score = float(obj.score_ia)
+                return f"{score:.1f}%"
+            except (ValueError, TypeError):
+                return "Erreur de score"
+        return "Non analysé"
+    score_ia_display.short_description = 'Score IA'
+    
+    def has_files(self, obj):
+        files = []
+        if obj.cv:
+            files.append('CV')
+        if obj.lettre_motivation:
+            files.append('Lettre')
+        return ', '.join(files) if files else 'Aucun'
+    has_files.short_description = 'Documents'
 
 # Configuration du site admin
 admin.site.site_header = "CV Analyser - Administration"

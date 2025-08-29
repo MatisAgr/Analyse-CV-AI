@@ -117,9 +117,10 @@ python manage.py runserver
 📱 **Interface web** : http://127.0.0.1:8000/
 
 ### Comptes de test
-- **Admin** : admin@example.com / admin123
-- **Recruteur** : recruteur@example.com / recrut123
-- **Candidat** : candidat@example.com / candidat123
+- **Admin** : à faire soi même
+- **Recruteur** : testrecruteur@test.test / test
+- **Candidat** : testcandidat@test.test / test
+- **Candidat 2** : testcandidat2@test.test / test
 
 ---
 

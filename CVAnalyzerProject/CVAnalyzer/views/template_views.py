@@ -4,6 +4,16 @@ from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+import os
+import json
+
+# Import des services IA
+from ..ai_services.text_extractor import TextExtractor
+from ..ai_services.cv_analyzer import CVAnalyzer
+from ..models import Candidature
 
 # Utiliser le modèle User personnalisé
 User = get_user_model()
@@ -84,12 +94,116 @@ def logout_view(request):
 
 @login_required
 def upload_documents(request):
+    """
+    Vue pour gérer l'upload de CV et l'analyse IA
+    """
     if request.method == 'POST':
-        # upload des fichiers on verra plus tard
-        return JsonResponse({
-            'success': True,
-            'message': 'Documents reçus et en cours d\'analyse par notre IA.'
-        })
+        try:
+            # Vérification qu'un fichier CV est présent
+            if 'cv' not in request.FILES:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Aucun fichier CV trouvé.'
+                })
+            
+            cv_file = request.FILES['cv']
+            
+            # Validation du type de fichier
+            allowed_extensions = ['pdf', 'doc', 'docx']
+            file_extension = cv_file.name.split('.')[-1].lower()
+            
+            if file_extension not in allowed_extensions:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Format de fichier non supporté. Utilisez PDF, DOC ou DOCX.'
+                })
+            
+            # Sauvegarde temporaire du fichier
+            file_path = default_storage.save(f'temp_cv/{cv_file.name}', ContentFile(cv_file.read()))
+            full_file_path = os.path.join(default_storage.location, file_path)
+            
+            # Extraction du texte
+            extractor = TextExtractor()
+            
+            if file_extension == 'pdf':
+                extraction_result = extractor.extract_from_pdf(full_file_path)
+            else:  # doc/docx
+                extraction_result = extractor.extract_from_docx(full_file_path)
+            
+            if not extraction_result['success']:
+                # Nettoyage du fichier temporaire
+                if os.path.exists(full_file_path):
+                    os.remove(full_file_path)
+                return JsonResponse({
+                    'success': False,
+                    'message': f'Erreur lors de l\'extraction du texte: {extraction_result["error"]}'
+                })
+            
+            extracted_text = extraction_result['text']
+            
+            # Analyse IA du CV avec optimisations GPU
+            analyzer = CVAnalyzer()
+            
+            # Affichage des informations GPU
+            gpu_info = analyzer.get_gpu_info()
+            print(f"🔧 Configuration GPU: {gpu_info}")
+            
+            try:
+                # Analyse des compétences
+                skills_analysis = analyzer.extract_skills(extracted_text)
+                
+                # Analyse de l'expérience
+                experience_analysis = analyzer.extract_experience(extracted_text)
+                
+                # Calcul du score global
+                overall_score = analyzer.calculate_overall_score({
+                    'skills': skills_analysis,
+                    'experience': experience_analysis,
+                    'text_length': len(extracted_text)
+                })
+                
+                print(f"✅ Analyse terminée - Score: {overall_score}% (GPU: {gpu_info.get('gpu_available', False)})")
+                
+            finally:
+                # Nettoyage de la mémoire GPU après traitement
+                analyzer.cleanup_gpu_memory()
+            
+            # Création de la candidature en base de données
+            candidature = Candidature.objects.create(
+                candidat=request.user,
+                poste='Candidature spontanée',  # Valeur par défaut
+                entreprise='CIVIA Corp.',
+                cv=cv_file,
+                status='en_attente',
+                score_ia=overall_score,
+                competences_extraites=skills_analysis,  # Correction: utiliser directement skills_analysis
+                commentaires=f'CV analysé automatiquement. Score: {overall_score}% - GPU: {gpu_info.get("gpu_available", False)}'
+            )
+            
+            # Nettoyage du fichier temporaire
+            if os.path.exists(full_file_path):
+                os.remove(full_file_path)
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'CV analysé avec succès !',
+                'data': {
+                    'candidature_id': candidature.id,
+                    'score_ia': overall_score,
+                    'competences_trouvees': len(skills_analysis.get('skills', [])),
+                    'redirect_url': f'/account/{candidature.id}/'
+                }
+            })
+            
+        except Exception as e:
+            # Nettoyage en cas d'erreur
+            if 'full_file_path' in locals() and os.path.exists(full_file_path):
+                os.remove(full_file_path)
+            
+            return JsonResponse({
+                'success': False,
+                'message': f'Erreur lors du traitement: {str(e)}'
+            })
     
     return JsonResponse({'success': False, 'message': 'Méthode non autorisée'})
 

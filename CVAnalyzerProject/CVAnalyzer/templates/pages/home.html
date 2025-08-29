@@ -222,43 +222,25 @@
 
         // Mettre à jour la liste des fichiers
         function updateFilesList() {
-            const hasFiles = selectedFiles.cv || selectedFiles.motivation;
-            
-            if (hasFiles) {
+            if (selectedFiles.cv) {
                 filesList.classList.remove('hidden');
-                filesList.innerHTML = '<h3 class="text-lg font-medium text-white mb-3">Fichiers sélectionnés :</h3>';
+                filesList.innerHTML = '<h3 class="text-lg font-medium text-white mb-3">Fichier sélectionné :</h3>';
                 
-                if (selectedFiles.cv) {
-                    const cvDiv = document.createElement('div');
-                    cvDiv.className = 'flex items-center justify-between bg-green-500 bg-opacity-20 rounded-lg p-3';
-                    cvDiv.innerHTML = `
-                        <div class="flex items-center">
-                            <i class="fas fa-file-alt text-green-400 mr-2"></i>
-                            <span class="text-white">CV: ${selectedFiles.cv.name}</span>
-                        </div>
-                        <button onclick="removeFile('cv')" class="text-red-400 hover:text-red-300">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    `;
-                    filesList.appendChild(cvDiv);
-                }
-                
-                if (selectedFiles.motivation) {
-                    const motivationDiv = document.createElement('div');
-                    motivationDiv.className = 'flex items-center justify-between bg-blue-500 bg-opacity-20 rounded-lg p-3';
-                    motivationDiv.innerHTML = `
-                        <div class="flex items-center">
-                            <i class="fas fa-heart text-blue-400 mr-2"></i>
-                            <span class="text-white">Lettre: ${selectedFiles.motivation.name}</span>
-                        </div>
-                        <button onclick="removeFile('motivation')" class="text-red-400 hover:text-red-300">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    `;
-                    filesList.appendChild(motivationDiv);
-                }
+                const cvDiv = document.createElement('div');
+                cvDiv.className = 'flex items-center justify-between bg-green-500 bg-opacity-20 rounded-lg p-3';
+                cvDiv.innerHTML = `
+                    <div class="flex items-center">
+                        <i class="fas fa-file-alt text-green-400 mr-2"></i>
+                        <span class="text-white">CV: ${selectedFiles.cv.name}</span>
+                    </div>
+                    <button onclick="removeFile('cv')" class="text-red-400 hover:text-red-300">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                filesList.appendChild(cvDiv);
                 
                 submitBtn.classList.remove('hidden');
+                submitBtn.innerHTML = '<i class="fas fa-rocket mr-2"></i>Analyser mon CV';
             } else {
                 filesList.classList.add('hidden');
                 submitBtn.classList.add('hidden');
@@ -285,17 +267,22 @@
                 return;
             }
 
-            // Envoyer les fichiers
-            const formData = new FormData();
-            if (selectedFiles.cv) {
-                formData.append('cv', selectedFiles.cv);
-            }
-            if (selectedFiles.motivation) {
-                formData.append('motivation', selectedFiles.motivation);
+            // Vérification qu'un CV est sélectionné
+            if (!selectedFiles.cv) {
+                alert('Veuillez sélectionner un CV à analyser.');
+                return;
             }
 
+            // Afficher un indicateur de chargement
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Analyse en cours...';
+            submitBtn.disabled = true;
+
+            // Envoyer le CV pour analyse
+            const formData = new FormData();
+            formData.append('cv', selectedFiles.cv);
+
             try {
-                const response = await fetch('/api/upload/', {
+                const response = await fetch('/upload/', {
                     method: 'POST',
                     body: formData,
                     headers: {
@@ -304,20 +291,68 @@
                 });
 
                 const result = await response.json();
+                
                 if (result.success) {
-                    // Afficher le message de succès
-                    successMessage.classList.remove('hidden');
-                    setTimeout(() => {
-                        successMessage.classList.add('hidden');
-                    }, 5000);
+                    // Afficher les résultats de l'analyse
+                    const resultData = result.data;
+                    
+                    // Créer un modal de résultats
+                    const resultModal = document.createElement('div');
+                    resultModal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+                    resultModal.innerHTML = `
+                        <div class="bg-white rounded-lg p-8 max-w-md mx-4">
+                            <div class="text-center">
+                                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <i class="fas fa-check text-2xl text-green-600"></i>
+                                </div>
+                                <h3 class="text-xl font-bold text-gray-900 mb-2">Analyse terminée !</h3>
+                                <p class="text-gray-600 mb-4">${result.message}</p>
+                                
+                                <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <span class="text-sm text-gray-600">Score IA:</span>
+                                        <span class="font-bold text-lg text-blue-600">${resultData.score_ia}%</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm text-gray-600">Compétences trouvées:</span>
+                                        <span class="font-bold text-green-600">${resultData.competences_trouvees}</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex space-x-2">
+                                    <button onclick="this.parentElement.parentElement.parentElement.parentElement.remove()" 
+                                            class="flex-1 bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300">
+                                        Fermer
+                                    </button>
+                                    <a href="${resultData.redirect_url}" 
+                                       class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-center">
+                                        Voir les détails
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.body.appendChild(resultModal);
 
                     // Réinitialiser le formulaire
                     selectedFiles = { cv: null, motivation: null };
                     cvInput.value = '';
                     motivationInput.value = '';
                     updateFilesList();
+                    
+                } else {
+                    alert('Erreur: ' + result.message);
                 }
+                
             } catch (error) {
+                console.error('Erreur lors de l\'envoi:', error);
+                alert('Erreur lors de l\'envoi. Veuillez réessayer.');
+            } finally {
+                // Rétablir le bouton
+                submitBtn.innerHTML = '<i class="fas fa-rocket mr-2"></i>Analyser mon CV';
+                submitBtn.disabled = false;
+            } {
                 console.error('Erreur lors de l\'envoi:', error);
                 alert('Erreur lors de l\'envoi. Veuillez réessayer.');
             }

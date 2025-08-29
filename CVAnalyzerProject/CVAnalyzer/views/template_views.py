@@ -112,6 +112,16 @@ def check_auth_status(request):
 # page compte utilisateur
 @login_required
 def account_view(request):
+    # Rediriger selon le rôle
+    if request.user.role == 'recruteur' or request.user.role == 'admin':
+        return redirect('recruiter-dashboard')
+    else:
+        return candidat_dashboard_view(request)
+
+
+# Dashboard candidat
+@login_required
+def candidat_dashboard_view(request):
     # Données fictives pour les candidatures
     candidatures_fictives = [
         {
@@ -173,6 +183,128 @@ def account_view(request):
         }
     }
     return render(request, 'pages/account.html', context)
+
+
+# Dashboard recruteur
+@login_required
+def recruiter_dashboard_view(request):
+    if request.user.role not in ['recruteur', 'admin']:
+        messages.error(request, 'Accès non autorisé.')
+        return redirect('account')
+    
+    # Données fictives pour toutes les candidatures (vue recruteur)
+    toutes_candidatures = [
+        {
+            'id': 1,
+            'candidat_nom': 'John Doe',
+            'candidat_initiales': 'JD',
+            'candidat_email': 'john.doe@email.com',
+            'poste': 'Développeur Full Stack',
+            'entreprise': 'TechCorp',
+            'date_candidature': '2025-08-25',
+            'statut': 'en_attente',
+            'statut_display': 'En attente',
+            'statut_color': 'yellow',
+            'score_ia': 85,
+            'cv_nom': 'CV_John_Doe.pdf',
+            'lettre_nom': 'Lettre_motivation.pdf',
+            'urgent': False
+        },
+        {
+            'id': 2,
+            'candidat_nom': 'Jane Smith',
+            'candidat_initiales': 'JS',
+            'candidat_email': 'jane.smith@email.com',
+            'poste': 'Designer UX/UI',
+            'entreprise': 'CreativeCorp',
+            'date_candidature': '2025-08-24',
+            'statut': 'en_revision',
+            'statut_display': 'En révision',
+            'statut_color': 'blue',
+            'score_ia': 91,
+            'cv_nom': 'CV_Jane_Smith.pdf',
+            'lettre_nom': 'Lettre_Designer.pdf',
+            'urgent': False
+        },
+        {
+            'id': 3,
+            'candidat_nom': 'Mike Johnson',
+            'candidat_initiales': 'MJ',
+            'candidat_email': 'mike.j@email.com',
+            'poste': 'Chef de Projet Digital',
+            'entreprise': 'InnovCorp',
+            'date_candidature': '2025-08-20',
+            'statut': 'accepte',
+            'statut_display': 'Accepté',
+            'statut_color': 'green',
+            'score_ia': 92,
+            'cv_nom': 'CV_Mike_Johnson.pdf',
+            'lettre_nom': 'Lettre_chef_projet.pdf',
+            'urgent': False
+        },
+        {
+            'id': 4,
+            'candidat_nom': 'Sarah Wilson',
+            'candidat_initiales': 'SW',
+            'candidat_email': 'sarah.w@email.com',
+            'poste': 'Développeur Frontend',
+            'entreprise': 'StartupXYZ',
+            'date_candidature': '2025-08-15',
+            'statut': 'rejete',
+            'statut_display': 'Rejeté',
+            'statut_color': 'red',
+            'score_ia': 68,
+            'cv_nom': 'CV_Sarah_Wilson.pdf',
+            'lettre_nom': None,
+            'urgent': False
+        },
+        {
+            'id': 5,
+            'candidat_nom': 'Alex Brown',
+            'candidat_initiales': 'AB',
+            'candidat_email': 'alex.brown@email.com',
+            'poste': 'Data Scientist',
+            'entreprise': 'DataCorp',
+            'date_candidature': '2025-08-28',
+            'statut': 'nouveau',
+            'statut_display': 'Nouveau',
+            'statut_color': 'purple',
+            'score_ia': 88,
+            'cv_nom': 'CV_Alex_Brown.pdf',
+            'lettre_nom': 'Lettre_DataScience.pdf',
+            'urgent': False
+        }
+    ]
+    
+    # Calculer les statistiques
+    total_candidatures = len(toutes_candidatures)
+    nouveau = len([c for c in toutes_candidatures if c['statut'] == 'nouveau'])
+    en_attente = len([c for c in toutes_candidatures if c['statut'] == 'en_attente'])
+    acceptees = len([c for c in toutes_candidatures if c['statut'] == 'accepte'])
+    
+    context = {
+        'title': 'Dashboard Recruteur - Gestion des candidatures',
+        'candidatures': toutes_candidatures,
+        'user': request.user,
+        'stats': {
+            'total': total_candidatures,
+            'nouveau': nouveau,
+            'en_attente': en_attente,
+            'acceptees': acceptees,
+        }
+    }
+    return render(request, 'pages/recruiter_dashboard.html', context)
+
+
+# Dashboard admin (placeholder)
+@login_required
+def admin_dashboard_view(request):
+    if request.user.role != 'admin':
+        messages.error(request, 'Accès non autorisé.')
+        return redirect('account')
+    
+    # Pour l'instant, rediriger vers le dashboard recruteur
+    return recruiter_dashboard_view(request)
 
 
 # page détails d'une candidature

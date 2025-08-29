@@ -15,6 +15,9 @@ class User(AbstractUser):
     # Email comme identifiant unique
     email = models.EmailField(unique=True, help_text="Adresse email (identifiant de connexion)")
     
+    # Username généré automatiquement à partir de l'email
+    username = models.CharField(max_length=150, unique=True, help_text="Nom d'utilisateur généré automatiquement")
+    
     role = models.CharField(
         max_length=20, 
         choices=ROLE_CHOICES, 
@@ -38,9 +41,18 @@ class User(AbstractUser):
         Override de save pour générer username et assigner automatiquement 
         les groupes selon le rôle
         """
-        # Générer username à partir de l'email si pas défini
+        # Générer username unique à partir de l'email si pas défini
         if not self.username:
-            self.username = self.email.split('@')[0]
+            base_username = self.email.split('@')[0]
+            username = base_username
+            counter = 1
+            
+            # S'assurer que le username est unique
+            while User.objects.filter(username=username).exists():
+                username = f"{base_username}{counter}"
+                counter += 1
+            
+            self.username = username
             
         is_new = self.pk is None
         super().save(*args, **kwargs)

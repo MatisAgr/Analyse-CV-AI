@@ -1,10 +1,10 @@
 # TISMA IMPORT
-# from django.shortcuts import render, redirect
-# from django.contrib.auth import authenticate, login, logout
-# from django.contrib.auth.models import User
-# from django.contrib import messages
-# from django.contrib.auth.decorators import login_required
-# from django.http import JsonResponse
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 # import json
 
 from rest_framework.decorators import api_view, permission_classes
@@ -237,3 +237,4 @@ def check_auth_status(request):
     return JsonResponse({
         'authenticated': request.user.is_authenticated,
         'display_name': display_name
+    })

@@ -7,7 +7,7 @@ from . import views
 def api_status(request):
     """Endpoint temporaire pour vérifier que l'API fonctionne"""
     return Response({
-        'status': 'API CVAnalyzer - Étape 3 terminée',
+        'status': 'API CVAnalyzer',
         'version': '3.0.0',
         'message': 'Endpoints API DRF prêts',
         'endpoints': [
@@ -25,9 +25,9 @@ urlpatterns = [
     # Status
     path('status/', api_status, name='api-status'),
     
-    # Authentification
-    path('register/', views.register, name='register'),
-    path('login/', views.login_user, name='login'),
+    # Authentification API
+    path('api/register/', views.register, name='api-register'),
+    path('api/login/', views.login_user, name='api-login'),
     
     # Profil utilisateur
     path('users/me/', views.user_profile, name='user-profile'),

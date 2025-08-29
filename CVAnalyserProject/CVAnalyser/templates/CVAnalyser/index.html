@@ -213,7 +213,7 @@
 
                 if (data.success) {
                     currentResumeId = data.resume_id;
-                    displayAnalysisResults(data.analysis);
+                    displayAnalysisResults(data.extracted_data);
                     document.getElementById('job-match').style.display = 'block';
                 } else {
                     contentDiv.innerHTML = `<div class="error">❌ Erreur: ${data.error}</div>`;

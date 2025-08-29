@@ -25,6 +25,27 @@ try:
 except LookupError:
     nltk.download('stopwords')
 
+def convert_numpy_types(obj):
+    """Convertit récursivement les types NumPy/PyTorch en types Python natifs pour la sérialisation JSON"""
+    if isinstance(obj, dict):
+        return {key: convert_numpy_types(value) for key, value in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_numpy_types(item) for item in obj]
+    elif isinstance(obj, tuple):
+        return tuple(convert_numpy_types(item) for item in obj)
+    elif isinstance(obj, np.ndarray):
+        return obj.tolist()
+    elif isinstance(obj, (np.float32, np.float64)):
+        return float(obj)
+    elif isinstance(obj, (np.int32, np.int64)):
+        return int(obj)
+    elif isinstance(obj, np.bool_):
+        return bool(obj)
+    elif hasattr(obj, 'item'):  # Pour les tensors PyTorch
+        return obj.item()
+    else:
+        return obj
+
 # Classe danalyse de CV
 class CVAnalyzer:
     def __init__(self, model_name='sentence-transformers/all-MiniLM-L6-v2'):
@@ -121,6 +142,9 @@ class CVAnalyzer:
             'entities': self.extract_entities(cv_text),
             'summary': self.generate_summary(cv_text)
         }
+        
+        # Convertir tous les types NumPy/PyTorch en types Python natifs
+        result = convert_numpy_types(result)
         
         return result
 
@@ -227,13 +251,18 @@ class CVAnalyzer:
             
             overall_score = (similarity * 0.6 + skills_score * 0.4) * 100
             
-            return {
-                'overall_score': round(overall_score, 2),
-                'semantic_similarity': round(similarity * 100, 2),
-                'skills_match_score': round(skills_score * 100, 2),
+            result = {
+                'overall_score': round(float(overall_score), 2),
+                'semantic_similarity': round(float(similarity) * 100, 2),
+                'skills_match_score': round(float(skills_score) * 100, 2),
                 'cv_skills': cv_skills,
                 'job_skills': job_skills
             }
+            
+            # Convertir tous les types NumPy en types Python natifs
+            result = convert_numpy_types(result)
+            
+            return result
             
         except Exception as e:
             return {'error': f'Erreur lors du calcul: {e}'}

@@ -1,0 +1,289 @@
+{% extends 'core/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+
+<section class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-6xl mx-auto px-4">
+        
+        <!-- Breadcrumb et retour -->
+        <div class="mb-6">
+            <nav class="flex items-center space-x-2 text-sm text-gray-500">
+                <a href="{% url 'account' %}" class="hover:text-indigo-600">Mon compte</a>
+                <i class="fas fa-chevron-right text-xs"></i>
+                <span class="text-gray-900">{{ candidature.poste }}</span>
+            </nav>
+        </div>
+
+        <!-- En-tête candidature -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">{{ candidature.poste }}</h1>
+                    <p class="text-xl text-gray-600">{{ candidature.entreprise }}</p>
+                    <p class="text-sm text-gray-500 mt-2">
+                        <i class="fas fa-calendar mr-1"></i>
+                        Candidature soumise le {{ candidature.date_candidature|date:"d M Y" }}
+                    </p>
+                </div>
+                <div class="text-right">
+                    {% if candidature.statut_color == 'green' %}
+                        <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                            <i class="fas fa-check-circle mr-2"></i>
+                            {{ candidature.statut_display }}
+                        </span>
+                    {% elif candidature.statut_color == 'yellow' %}
+                        <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                            <i class="fas fa-clock mr-2"></i>
+                            {{ candidature.statut_display }}
+                        </span>
+                    {% elif candidature.statut_color == 'red' %}
+                        <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                            <i class="fas fa-times-circle mr-2"></i>
+                            {{ candidature.statut_display }}
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Actions -->
+            <div class="flex space-x-3">
+                <a href="{% url 'account' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Retour à mes candidatures
+                </a>
+                <button class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700">
+                    <i class="fas fa-download mr-2"></i>
+                    Télécharger le dossier
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Colonne principale -->
+            <div class="lg:col-span-2 space-y-6">
+                
+                <!-- Score IA et analyse -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">
+                        <i class="fas fa-brain text-indigo-600 mr-2"></i>
+                        Analyse IA
+                    </h2>
+                    
+                    <!-- Score principal -->
+                    <div class="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-lg p-4 mb-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-lg font-medium text-gray-900">Score global</h3>
+                                <p class="text-sm text-gray-600">Basé sur l'analyse de votre CV et lettre de motivation</p>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-4xl font-bold {% if candidature.score_ia >= 80 %}text-green-600{% elif candidature.score_ia >= 60 %}text-yellow-600{% else %}text-red-600{% endif %}">
+                                    {{ candidature.score_ia }}%
+                                </div>
+                                <div class="w-32 bg-gray-200 rounded-full h-3 mt-2">
+                                    <div class="h-3 rounded-full {% if candidature.score_ia >= 80 %}bg-green-500{% elif candidature.score_ia >= 60 %}bg-yellow-500{% else %}bg-red-500{% endif %}" 
+                                         style="width: {{ candidature.score_ia }}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Compétences extraites -->
+                    <div class="mb-6">
+                        <h4 class="font-medium text-gray-900 mb-3">Compétences identifiées</h4>
+                        <div class="flex flex-wrap gap-2">
+                            {% for competence in candidature.competences_extraites %}
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    <i class="fas fa-check-circle mr-1"></i>
+                                    {{ competence }}
+                                </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Points forts -->
+                    {% if candidature.points_forts %}
+                    <div class="mb-6">
+                        <h4 class="font-medium text-gray-900 mb-3 flex items-center">
+                            <i class="fas fa-thumbs-up text-green-500 mr-2"></i>
+                            Points forts
+                        </h4>
+                        <ul class="space-y-2">
+                            {% for point in candidature.points_forts %}
+                                <li class="flex items-start">
+                                    <i class="fas fa-plus-circle text-green-500 mr-2 mt-1"></i>
+                                    <span class="text-sm text-gray-700">{{ point }}</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    <!-- Points d'amélioration -->
+                    {% if candidature.points_amelioration %}
+                    <div>
+                        <h4 class="font-medium text-gray-900 mb-3 flex items-center">
+                            <i class="fas fa-exclamation-triangle text-yellow-500 mr-2"></i>
+                            Points d'amélioration
+                        </h4>
+                        <ul class="space-y-2">
+                            {% for point in candidature.points_amelioration %}
+                                <li class="flex items-start">
+                                    <i class="fas fa-minus-circle text-yellow-500 mr-2 mt-1"></i>
+                                    <span class="text-sm text-gray-700">{{ point }}</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Timeline du processus -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">
+                        <i class="fas fa-history text-indigo-600 mr-2"></i>
+                        Suivi du processus
+                    </h2>
+                    
+                    <div class="space-y-4">
+                        {% for etape in candidature.timeline %}
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0">
+                                    {% if etape.status == 'completed' %}
+                                        <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                                            <i class="fas fa-check text-white text-sm"></i>
+                                        </div>
+                                    {% elif etape.status == 'current' %}
+                                        <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                                            <i class="fas fa-clock text-white text-sm"></i>
+                                        </div>
+                                    {% else %}
+                                        <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+                                            <i class="fas fa-circle text-gray-500 text-xs"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="ml-4 flex-1">
+                                    <div class="flex items-center justify-between">
+                                        <h4 class="text-sm font-medium {% if etape.status == 'current' %}text-blue-600{% elif etape.status == 'completed' %}text-green-600{% else %}text-gray-500{% endif %}">
+                                            {{ etape.action }}
+                                        </h4>
+                                        {% if etape.date %}
+                                            <span class="text-xs text-gray-500">{{ etape.date }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% if not forloop.last %}
+                                <div class="ml-4 w-px h-4 bg-gray-200"></div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Colonne latérale -->
+            <div class="space-y-6">
+                
+                <!-- Documents -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                        <i class="fas fa-folder text-indigo-600 mr-2"></i>
+                        Documents soumis
+                    </h3>
+                    
+                    <div class="space-y-3">
+                        {% if candidature.cv_nom %}
+                            <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                                <div class="flex items-center">
+                                    <i class="fas fa-file-pdf text-red-500 mr-3"></i>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-900">CV</p>
+                                        <p class="text-xs text-gray-500">{{ candidature.cv_nom }}</p>
+                                    </div>
+                                </div>
+                                <button class="text-indigo-600 hover:text-indigo-800">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                            </div>
+                        {% endif %}
+
+                        {% if candidature.lettre_nom %}
+                            <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                                <div class="flex items-center">
+                                    <i class="fas fa-file-alt text-blue-500 mr-3"></i>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-900">Lettre de motivation</p>
+                                        <p class="text-xs text-gray-500">{{ candidature.lettre_nom }}</p>
+                                    </div>
+                                </div>
+                                <button class="text-indigo-600 hover:text-indigo-800">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                            </div>
+                        {% else %}
+                            <div class="p-3 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                                <div class="text-center text-gray-500">
+                                    <i class="fas fa-file-alt text-2xl mb-2"></i>
+                                    <p class="text-sm">Aucune lettre de motivation</p>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Commentaires RH -->
+                {% if candidature.commentaires %}
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                        <i class="fas fa-comments text-indigo-600 mr-2"></i>
+                        Retour RH
+                    </h3>
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <p class="text-sm text-gray-700">{{ candidature.commentaires }}</p>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Actions rapides -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                        <i class="fas fa-tools text-indigo-600 mr-2"></i>
+                        Actions
+                    </h3>
+                    
+                    <div class="space-y-3">
+                        <button class="w-full flex items-center justify-center px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700">
+                            <i class="fas fa-edit mr-2"></i>
+                            Modifier candidature
+                        </button>
+                        <button class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50">
+                            <i class="fas fa-copy mr-2"></i>
+                            Dupliquer pour autre poste
+                        </button>
+                        {% if candidature.statut != 'accepte' %}
+                        <button class="w-full flex items-center justify-center px-4 py-2 border border-red-300 text-red-700 rounded-md text-sm font-medium hover:bg-red-50">
+                            <i class="fas fa-times mr-2"></i>
+                            Retirer candidature
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Fonctions pour les actions (à implémenter plus tard)
+    console.log('Page détails candidature #{{ candidature.id }} chargée');
+</script>
+{% endblock %}

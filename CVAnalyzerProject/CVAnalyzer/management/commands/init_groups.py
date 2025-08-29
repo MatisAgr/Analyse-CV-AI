@@ -5,4 +5,4 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         for name in ['Administrateurs', 'Recruteurs', 'Candidats']:
             Group.objects.get_or_create(name=name)
-        self.stdout.write('✓ Groupes créés')
+        self.stdout.write('Groupes créés')

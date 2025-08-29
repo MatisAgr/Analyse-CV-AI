@@ -47,26 +47,13 @@ class User(AbstractUser):
     
     # Utiliser email comme identifiant de connexion
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']  # username sera généré automatiquement
+    REQUIRED_FIELDS = ['username']  # username
     
     def save(self, *args, **kwargs):
         """
-        Override de save pour générer username et assigner automatiquement 
+        Override de save pour assigner automatiquement 
         les groupes selon le rôle
         """
-        # Générer username unique à partir de l'email si pas défini
-        if not self.username:
-            base_username = self.email.split('@')[0]
-            username = base_username
-            counter = 1
-            
-            # S'assurer que le username est unique
-            while User.objects.filter(username=username).exists():
-                username = f"{base_username}{counter}"
-                counter += 1
-            
-            self.username = username
-            
         is_new = self.pk is None
         super().save(*args, **kwargs)
         

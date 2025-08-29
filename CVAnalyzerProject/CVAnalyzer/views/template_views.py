@@ -1,10 +1,12 @@
 # TEMPLATE VIEWS - Vues pour les templates HTML
 from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.models import User
+from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
+
+# Utiliser le modèle User personnalisé
+User = get_user_model()
 
 
 # page home
@@ -23,18 +25,14 @@ def login_view(request):
         email = request.POST.get('email')
         password = request.POST.get('password')
         
-        # user par mail
-        try:
-            user = User.objects.get(email=email)
-            user = authenticate(request, username=user.username, password=password)
-            if user is not None:
-                login(request, user)
-                messages.success(request, 'ggwp')
-                return redirect('home')
-            else:
-                messages.error(request, 'mail ou mot de passe incorrect.')
-        except User.DoesNotExist:
-            messages.error(request, 'aucun compte trouvé avec cette adresse email.')
+        # authentification directe avec email (grâce à USERNAME_FIELD = 'email')
+        user = authenticate(request, username=email, password=password)
+        if user is not None:
+            login(request, user)
+            messages.success(request, 'Connexion réussie !')
+            return redirect('home')
+        else:
+            messages.error(request, 'Email ou mot de passe incorrect.')
     
     return render(request, 'pages/login.html')
 
@@ -43,6 +41,7 @@ def register_view(request):
 
     if request.method == 'POST':
         email = request.POST.get('email')
+        username = request.POST.get('username')
         password1 = request.POST.get('password1')
         password2 = request.POST.get('password2')
         first_name = request.POST.get('first_name')
@@ -56,16 +55,12 @@ def register_view(request):
         if User.objects.filter(email=email).exists():
             messages.error(request, 'Adresse email est déjà utilisée.')
             return render(request, 'pages/register.html')
-        
-        # nom d'utilisateur basé sur le prénom
-        username_base = first_name.replace(' ', '')
-        username = username_base
-        counter = 1
-        while User.objects.filter(username=username).exists():
-            username = f"{username_base}{counter}"
-            counter += 1
+            
+        if User.objects.filter(username=username).exists():
+            messages.error(request, 'Ce nom d\'utilisateur est déjà pris.')
+            return render(request, 'pages/register.html')
 
-        # création du compte
+        # création du compte avec le username fourni
         try:
             user = User.objects.create_user(
                 username=username,
@@ -74,10 +69,10 @@ def register_view(request):
                 first_name=first_name,
                 last_name=last_name
             )
-            messages.success(request, 'Votre compte a été créé')
+            messages.success(request, 'Votre compte a été créé avec succès !')
             return redirect('login')
         except Exception as e:
-            messages.error(request, 'Erreur lors de la création du compte.')
+            messages.error(request, f'Erreur lors de la création du compte: {str(e)}')
     
     return render(request, 'pages/register.html')
 

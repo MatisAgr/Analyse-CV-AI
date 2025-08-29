@@ -2,9 +2,9 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 import json
-from .ai_services.ai_trainer import AIModelTrainer
-from .ai_services.dataset_manager import DatasetManager
-from .ai_services.cv_analyzer import CVAnalyzer
+from ..ai_services.ai_trainer import AIModelTrainer
+from ..ai_services.dataset_manager import DatasetManager
+from ..ai_services.cv_analyzer import CVAnalyzer
 
 trainer = AIModelTrainer()
 dataset_manager = DatasetManager()

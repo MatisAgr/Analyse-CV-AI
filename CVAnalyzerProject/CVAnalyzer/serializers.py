@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
-from .models import User
+from .models import User, Candidature
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
@@ -98,3 +98,75 @@ class UserListSerializer(serializers.ModelSerializer):
         model = User
         fields = ('id', 'email', 'first_name', 'last_name', 'role', 'is_active', 'groups', 'created_at')
         read_only_fields = ('id', 'created_at', 'groups')
+
+
+class CandidatureCreateSerializer(serializers.ModelSerializer):
+    """Serializer pour créer une candidature"""
+    
+    class Meta:
+        model = Candidature
+        fields = ('poste', 'entreprise', 'cv', 'lettre_motivation')
+        
+    def validate_cv(self, value):
+        """Validation du fichier CV"""
+        if value.size > 5 * 1024 * 1024:  # 5MB
+            raise serializers.ValidationError("Le CV ne peut pas dépasser 5MB")
+        return value
+    
+    def validate_lettre_motivation(self, value):
+        """Validation de la lettre de motivation"""
+        if value and value.size > 5 * 1024 * 1024:  # 5MB
+            raise serializers.ValidationError("La lettre ne peut pas dépasser 5MB")
+        return value
+    
+    def create(self, validated_data):
+        # Ajouter automatiquement le candidat connecté
+        validated_data['candidat'] = self.context['request'].user
+        return super().create(validated_data)
+
+
+class CandidatureListSerializer(serializers.ModelSerializer):
+    """Serializer pour lister les candidatures"""
+    candidat = UserProfileSerializer(read_only=True)
+    cv_url = serializers.SerializerMethodField()
+    lettre_url = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Candidature
+        fields = (
+            'id', 'candidat', 'poste', 'entreprise', 'status', 
+            'cv_url', 'lettre_url', 'score_ia', 'competences_extraites',
+            'created_at', 'updated_at', 'commentaires'
+        )
+    
+    def get_cv_url(self, obj):
+        if obj.cv:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.cv.url)
+        return None
+    
+    def get_lettre_url(self, obj):
+        if obj.lettre_motivation:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.lettre_motivation.url)
+        return None
+
+
+class CandidatureUpdateSerializer(serializers.ModelSerializer):
+    """Serializer pour modifier une candidature (recruteurs)"""
+    
+    class Meta:
+        model = Candidature
+        fields = ('status', 'commentaires', 'score_ia')
+    
+    def validate_status(self, value):
+        """Validation du statut"""
+        user = self.context['request'].user
+        
+        # Seuls les recruteurs et admins peuvent changer le statut
+        if user.role not in ['admin', 'recruteur']:
+            raise serializers.ValidationError("Seuls les recruteurs peuvent modifier le statut")
+        
+        return value

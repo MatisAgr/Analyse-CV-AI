@@ -8,18 +8,21 @@ from . import security_views
 def api_status(request):
     """Endpoint temporaire pour vérifier que l'API fonctionne"""
     return Response({
-        'status': 'API CVAnalyzer - Étape 4 Sécurité',
-        'version': '4.0.0',
-        'message': 'Sécurité basique configurée',
         'endpoints': [
             'POST /api/register/',
             'POST /api/login/',
             'GET /api/users/me/',
             'PUT /api/users/me/',
             'GET /api/users/',
+            'POST /api/candidatures/',
+            'GET /api/candidatures/',
+            'GET /api/candidatures/{id}/',
+            'PUT /api/candidatures/{id}/',
+            'DELETE /api/candidatures/{id}/',
             'GET /api/security/status/',
             'GET /api/security/csrf-token/',
             'POST /api/security/test-xss/',
+            'GET /api/security/user-info/',
         ]
     })
 
@@ -41,6 +44,13 @@ urlpatterns = [
     # Tests
     path('check/', views.check_user_info, name='check-user'),
     path('admin-only/', views.admin_only, name='admin-only'),
+    
+    # Candidatures
+    path('candidatures/', views.list_candidatures, name='list-candidatures'),
+    path('candidatures/create/', views.create_candidature, name='create-candidature'),
+    path('candidatures/<int:candidature_id>/', views.get_candidature, name='get-candidature'),
+    path('candidatures/<int:candidature_id>/update/', views.update_candidature, name='update-candidature'),
+    path('candidatures/<int:candidature_id>/delete/', views.delete_candidature, name='delete-candidature'),
     
     # Sécurité 
     path('security/status/', security_views.security_status, name='security-status'),

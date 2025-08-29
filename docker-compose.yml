@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  # Base de données PostgreSQL
+  db:
+    image: postgres:15-alpine
+    container_name: cv_analyzer_db
+    environment:
+      POSTGRES_DB: cv_analyzer_db
+      POSTGRES_USER: cv_analyzer_user
+      POSTGRES_PASSWORD: cv_analyzer_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cv_analyzer_user -d cv_analyzer_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Cache Redis
+  redis:
+    image: redis:7-alpine
+    container_name: cv_analyzer_redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Application Django
+  web:
+    build: .
+    container_name: cv_analyzer_web
+    environment:
+      - DEBUG=True
+      - SECRET_KEY=dev-secret-key-change-in-production
+      - DATABASE_URL=postgresql://cv_analyzer_user:cv_analyzer_password@db:5432/cv_analyzer_db
+      - REDIS_URL=redis://redis:6379/0
+      - DJANGO_SUPERUSER_EMAIL=admin@cvanalyzer.com
+      - DJANGO_SUPERUSER_PASSWORD=admin123
+      - DJANGO_DEBUG=True
+      - ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
+    volumes:
+      - ./CVAnalyzerProject:/app/CVAnalyzerProject
+      - media_volume:/app/media
+      - static_volume:/app/staticfiles
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: python manage.py runserver 0.0.0.0:8000
+
+  # Nginx (optionnel pour la production)
+  nginx:
+    image: nginx:alpine
+    container_name: cv_analyzer_nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./docker/nginx.conf:/etc/nginx/nginx.conf
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    depends_on:
+      - web
+    profiles:
+      - production
+
+volumes:
+  postgres_data:
+  redis_data:
+  media_volume:
+  static_volume:

@@ -1,0 +1,133 @@
+version: '3.8'
+
+services:
+  # Base de données PostgreSQL
+  db:
+    image: postgres:15-alpine
+    container_name: cv_analyzer_db_prod
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cv_analyzer_network
+
+  # Cache Redis
+  redis:
+    image: redis:7-alpine
+    container_name: cv_analyzer_redis_prod
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data_prod:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "--no-auth-warning", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cv_analyzer_network
+
+  # Application Django
+  web:
+    build: 
+      context: .
+      dockerfile: Dockerfile.prod
+    container_name: cv_analyzer_web_prod
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=${SECRET_KEY}
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - DJANGO_SUPERUSER_EMAIL=${DJANGO_SUPERUSER_EMAIL}
+      - DJANGO_SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD}
+    volumes:
+      - media_volume_prod:/app/media
+      - static_volume_prod:/app/staticfiles
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - cv_analyzer_network
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: cv_analyzer_nginx_prod
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx-prod.conf:/etc/nginx/nginx.conf
+      - static_volume_prod:/app/staticfiles
+      - media_volume_prod:/app/media
+      - ./docker/ssl:/etc/nginx/ssl
+    restart: unless-stopped
+    depends_on:
+      - web
+    networks:
+      - cv_analyzer_network
+
+  # Worker Celery pour tâches asynchrones IA
+  worker:
+    build: 
+      context: .
+      dockerfile: Dockerfile.prod
+    container_name: cv_analyzer_worker_prod
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=${SECRET_KEY}
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
+    command: celery -A CVAnalyzerProject worker --loglevel=info
+    volumes:
+      - media_volume_prod:/app/media
+    restart: unless-stopped
+    depends_on:
+      - db
+      - redis
+    networks:
+      - cv_analyzer_network
+
+  # Celery Beat pour tâches programmées
+  beat:
+    build: 
+      context: .
+      dockerfile: Dockerfile.prod
+    container_name: cv_analyzer_beat_prod
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=${SECRET_KEY}
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
+    command: celery -A CVAnalyzerProject beat --loglevel=info
+    volumes:
+      - media_volume_prod:/app/media
+    restart: unless-stopped
+    depends_on:
+      - db
+      - redis
+    networks:
+      - cv_analyzer_network
+
+volumes:
+  postgres_data_prod:
+  redis_data_prod:
+  media_volume_prod:
+  static_volume_prod:
+
+networks:
+  cv_analyzer_network:
+    driver: bridge

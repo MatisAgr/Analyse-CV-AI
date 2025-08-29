@@ -6,6 +6,8 @@ Système d'analyse intelligente de CV avec modèles BERT et Transformers pour l'
 
 </div>
 
+Tisma :   [![wakatime](https://wakatime.com/badge/user/a16f794f-b91d-4818-8dfc-d768ce605ece/project/0f9086b7-47b0-4742-b5d3-ed4a901db5dc.svg)](https://wakatime.com/badge/user/a16f794f-b91d-4818-8dfc-d768ce605ece/project/0f9086b7-47b0-4742-b5d3-ed4a901db5dc)
+
 ---
 
 ## 📋 Sommaire

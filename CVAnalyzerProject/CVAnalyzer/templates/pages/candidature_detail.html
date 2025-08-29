@@ -393,6 +393,39 @@
                     </h3>
                     
                     <div class="space-y-3">
+                        {% if user.role == 'recruteur' or user.role == 'admin' %}
+                            <!-- Actions recruteur -->
+                            {% if candidature.status != 'acceptee' %}
+                                <a href="{% url 'accepter-candidature' candidature.id %}?from=detail" 
+                                   class="w-full flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700"
+                                   onclick="return confirm('Êtes-vous sûr de vouloir accepter cette candidature ?')">
+                                    <i class="fas fa-check mr-2"></i>
+                                    Accepter la candidature
+                                </a>
+                            {% endif %}
+                            {% if candidature.status != 'refusee' %}
+                                <a href="{% url 'refuser-candidature' candidature.id %}?from=detail" 
+                                   class="w-full flex items-center justify-center px-4 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700"
+                                   onclick="return confirm('Êtes-vous sûr de vouloir refuser cette candidature ?')">
+                                    <i class="fas fa-times mr-2"></i>
+                                    Refuser la candidature
+                                </a>
+                            {% endif %}
+                            {% if candidature.status == 'en_attente' %}
+                                <form method="post" action="{% url 'changer-statut-candidature' candidature.id %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="statut" value="en_cours">
+                                    <button type="submit" class="w-full flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700"
+                                            onclick="return confirm('Marquer cette candidature comme en cours d\'examen ?')">
+                                        <i class="fas fa-play mr-2"></i>
+                                        Marquer en cours
+                                    </button>
+                                </form>
+                            {% endif %}
+                            <hr class="my-3">
+                        {% endif %}
+                        
+                        <!-- Actions générales -->
                         <button onclick="showAlert()" class="w-full flex items-center justify-center px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700">
                             <i class="fas fa-edit mr-2"></i>
                             Modifier candidature

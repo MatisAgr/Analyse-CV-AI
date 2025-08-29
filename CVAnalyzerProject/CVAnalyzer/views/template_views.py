@@ -8,6 +8,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.db import models
+from django.utils import timezone
 import os
 import json
 
@@ -402,3 +403,124 @@ def candidature_detail_view(request, candidature_id):
     except Candidature.DoesNotExist:
         messages.error(request, 'Candidature non trouvée.')
         return redirect('account')
+
+
+# Actions pour accepter/refuser une candidature
+@login_required
+def accepter_candidature(request, candidature_id):
+    """
+    Vue pour accepter une candidature (réservée aux recruteurs/admins)
+    """
+    if request.user.role not in ['recruteur', 'admin']:
+        messages.error(request, 'Accès non autorisé.')
+        return redirect('account')
+    
+    try:
+        candidature = Candidature.objects.get(id=candidature_id)
+        
+        # Vérifier que la candidature n'est pas déjà traitée
+        if candidature.status in ['acceptee', 'refusee']:
+            messages.warning(request, f'Cette candidature a déjà été {candidature.get_status_display().lower()}.')
+        else:
+            # Mettre à jour le statut
+            candidature.status = 'acceptee'
+            
+            # Ajouter un commentaire automatique
+            commentaire_auto = f"Candidature acceptée par {request.user.first_name} {request.user.last_name} ({request.user.email}) le {timezone.now().strftime('%d/%m/%Y à %H:%M')}"
+            if candidature.commentaires:
+                candidature.commentaires += f"\n\n--- ACCEPTATION ---\n{commentaire_auto}"
+            else:
+                candidature.commentaires = commentaire_auto
+            
+            candidature.save()
+            
+            messages.success(request, f'Candidature de {candidature.candidat.first_name} {candidature.candidat.last_name} acceptée avec succès!')
+        
+        # Retourner vers le dashboard recruteur ou la page de détails selon la source
+        if request.GET.get('from') == 'detail':
+            return redirect('candidature-detail', candidature_id=candidature_id)
+        else:
+            return redirect('recruiter-dashboard')
+            
+    except Candidature.DoesNotExist:
+        messages.error(request, 'Candidature non trouvée.')
+        return redirect('recruiter-dashboard')
+
+
+@login_required
+def refuser_candidature(request, candidature_id):
+    """
+    Vue pour refuser une candidature (réservée aux recruteurs/admins)
+    """
+    if request.user.role not in ['recruteur', 'admin']:
+        messages.error(request, 'Accès non autorisé.')
+        return redirect('account')
+    
+    try:
+        candidature = Candidature.objects.get(id=candidature_id)
+        
+        # Vérifier que la candidature n'est pas déjà traitée
+        if candidature.status in ['acceptee', 'refusee']:
+            messages.warning(request, f'Cette candidature a déjà été {candidature.get_status_display().lower()}.')
+        else:
+            # Mettre à jour le statut
+            candidature.status = 'refusee'
+            
+            # Ajouter un commentaire automatique
+            commentaire_auto = f"Candidature refusée par {request.user.first_name} {request.user.last_name} ({request.user.email}) le {timezone.now().strftime('%d/%m/%Y à %H:%M')}"
+            if candidature.commentaires:
+                candidature.commentaires += f"\n\n--- REFUS ---\n{commentaire_auto}"
+            else:
+                candidature.commentaires = commentaire_auto
+                
+            candidature.save()
+            
+            messages.success(request, f'Candidature de {candidature.candidat.first_name} {candidature.candidat.last_name} refusée.')
+        
+        # Retourner vers le dashboard recruteur ou la page de détails selon la source
+        if request.GET.get('from') == 'detail':
+            return redirect('candidature-detail', candidature_id=candidature_id)
+        else:
+            return redirect('recruiter-dashboard')
+            
+    except Candidature.DoesNotExist:
+        messages.error(request, 'Candidature non trouvée.')
+        return redirect('recruiter-dashboard')
+
+
+@login_required
+def changer_statut_candidature(request, candidature_id):
+    """
+    Vue pour changer le statut d'une candidature (en_cours, en_attente, etc.)
+    """
+    if request.user.role not in ['recruteur', 'admin']:
+        messages.error(request, 'Accès non autorisé.')
+        return redirect('account')
+    
+    if request.method == 'POST':
+        nouveau_statut = request.POST.get('statut')
+        
+        if nouveau_statut not in ['en_attente', 'en_cours', 'acceptee', 'refusee']:
+            messages.error(request, 'Statut invalide.')
+            return redirect('recruiter-dashboard')
+        
+        try:
+            candidature = Candidature.objects.get(id=candidature_id)
+            ancien_statut = candidature.get_status_display()
+            candidature.status = nouveau_statut
+            
+            # Ajouter un commentaire de changement de statut
+            commentaire_auto = f"Statut changé de '{ancien_statut}' vers '{candidature.get_status_display()}' par {request.user.first_name} {request.user.last_name} le {timezone.now().strftime('%d/%m/%Y à %H:%M')}"
+            if candidature.commentaires:
+                candidature.commentaires += f"\n\n--- CHANGEMENT DE STATUT ---\n{commentaire_auto}"
+            else:
+                candidature.commentaires = commentaire_auto
+                
+            candidature.save()
+            
+            messages.success(request, f'Statut de la candidature mis à jour vers "{candidature.get_status_display()}"')
+            
+        except Candidature.DoesNotExist:
+            messages.error(request, 'Candidature non trouvée.')
+    
+    return redirect('recruiter-dashboard')

@@ -239,12 +239,30 @@
                                        class="text-indigo-600 hover:text-indigo-900" title="Voir les détails">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <button class="text-green-600 hover:text-green-900" title="Accepter">
-                                        <i class="fas fa-check"></i>
-                                    </button>
-                                    <button class="text-red-600 hover:text-red-900" title="Rejeter">
-                                        <i class="fas fa-times"></i>
-                                    </button>
+                                    {% if candidature.status != 'acceptee' %}
+                                        <a href="{% url 'accepter-candidature' candidature.id %}" 
+                                           class="text-green-600 hover:text-green-900" title="Accepter"
+                                           onclick="return confirm('Êtes-vous sûr de vouloir accepter cette candidature ?')">
+                                            <i class="fas fa-check"></i>
+                                        </a>
+                                    {% endif %}
+                                    {% if candidature.status != 'refusee' %}
+                                        <a href="{% url 'refuser-candidature' candidature.id %}" 
+                                           class="text-red-600 hover:text-red-900" title="Refuser"
+                                           onclick="return confirm('Êtes-vous sûr de vouloir refuser cette candidature ?')">
+                                            <i class="fas fa-times"></i>
+                                        </a>
+                                    {% endif %}
+                                    {% if candidature.status == 'en_attente' %}
+                                        <form method="post" action="{% url 'changer-statut-candidature' candidature.id %}" class="inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="statut" value="en_cours">
+                                            <button type="submit" class="text-blue-600 hover:text-blue-900" title="Marquer en cours"
+                                                    onclick="return confirm('Marquer cette candidature comme en cours d\'examen ?')">
+                                                <i class="fas fa-play"></i>
+                                            </button>
+                                        </form>
+                                    {% endif %}
                                 </div>
                             </td>
                         </tr>

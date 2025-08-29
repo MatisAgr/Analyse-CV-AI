@@ -79,6 +79,11 @@ urlpatterns = [
     # dashboard recruteur
     path('recruiter/', template_views.recruiter_dashboard_view, name='recruiter-dashboard'),
     
+    # Actions candidatures (recruteur)
+    path('candidature/<int:candidature_id>/accepter/', template_views.accepter_candidature, name='accepter-candidature'),
+    path('candidature/<int:candidature_id>/refuser/', template_views.refuser_candidature, name='refuser-candidature'),
+    path('candidature/<int:candidature_id>/changer-statut/', template_views.changer_statut_candidature, name='changer-statut-candidature'),
+    
     # Fonctionnalités
     path('upload/', template_views.upload_documents, name='upload-documents'),
     path('auth-status/', template_views.check_auth_status, name='auth-status'),

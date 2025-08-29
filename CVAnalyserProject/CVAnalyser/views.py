@@ -16,7 +16,7 @@ from .ai_services.dataset_manager import DatasetManager
 cv_analyzer = CVAnalyzer()
 
 def index(request):
-    return render(request, 'CVAnalyser/index.html')
+    return render(request, 'CVAnalyser/test.html')
 
 def api_index(request):
     """Documentation de l'API REST"""

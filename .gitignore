@@ -18,6 +18,18 @@ var/
 wheels/
 *.egg-info/
 .installed.cfg
+
+# Fichiers temporaires et tests
+test_*.py
+demo_*.py
+*_test.py
+*_demo.py
+setup_*.py
+install_*.py
+prepare_*.py
+
+# Scripts obsolètes
+start_server.*
 *.egg
 MANIFEST
 

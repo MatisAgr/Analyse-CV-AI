@@ -7,7 +7,6 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('CVAnalyzer', '0003_alter_user_username'),
-        ('CVAnalyzer', '0003_candidature'),
     ]
 
     operations = [
